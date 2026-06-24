@@ -25,7 +25,7 @@ class Subject(models.Model):
     def __str__(self):
         return self.name
 
-# 3. Classroom (Duy nhất 1 class)
+# 3. Classroom
 class Classroom(models.Model):
     name = models.CharField(max_length=100, verbose_name="Tên lớp học")
     # Thêm trường mã lớp (class_code) để học sinh nhập

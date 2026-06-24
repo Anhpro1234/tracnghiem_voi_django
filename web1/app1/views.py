@@ -4,7 +4,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import logout
 from django.db import transaction
-from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -37,7 +36,7 @@ def logout_view(request):
 def teacher_room(request):
     if not is_teacher(request.user): raise PermissionDenied("Bạn không có quyền vào phòng Giáo viên!")
 
-    # Lấy các lớp của GV này
+    # Lấy các lớp của GV
     my_classes = Classroom.objects.filter(teacher=request.user).order_by('-created_at')
 
     # Lấy danh sách Học sinh đang "Chờ duyệt"
@@ -245,13 +244,12 @@ def remove_student(request, class_id, student_id):
     if not is_teacher(request.user): raise PermissionDenied()
 
     classroom = get_object_or_404(Classroom, id=class_id, teacher=request.user)
-    # Import model User nếu chưa có (từ django.contrib.auth.models hoặc model User custom của bạn)
     from .models import User
     student = get_object_or_404(User, id=student_id)
 
     # Xóa khỏi danh sách học sinh của lớp
     classroom.students.remove(student)
-    # Xóa luôn cả bản ghi xin vào lớp (ClassEnrollment) để HS có thể xin lại nếu muốn
+    # Xóa luôn cả bản ghi xin vào lớp
     ClassEnrollment.objects.filter(classroom=classroom, student=student).delete()
 
     messages.success(request, f"Đã xóa học sinh {student.username} khỏi lớp {classroom.name}.")
@@ -265,13 +263,13 @@ def signup_view(request):
         # ... logic tạo user ...
         if form.is_valid():
             form.save()
-            return redirect('login') # Chỗ này quyết định sếp đi đâu sau khi bấm nút
+            return redirect('login')
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
 
 
-User = get_user_model()  # Lấy model User mà sếp đã cấu hình
+User = get_user_model()
 
 
 def signup_view(request):
@@ -295,9 +293,9 @@ def signup_view(request):
         # 3. Tạo User
         user = User.objects.create_user(username=username, email=email, password=password)
 
-        # 4. Gán role (Dựa vào model User của sếp, tớ giả định sếp dùng thuộc tính boolean)
+        # 4. Gán role
         if role == 'teacher':
-            user.is_teacher_flag = True  # Đổi tên thuộc tính này khớp với model của sếp nhé!
+            user.is_teacher_flag = True
         else:
             user.is_student_flag = True
         user.save()
@@ -310,7 +308,8 @@ def signup_view(request):
 @login_required
 def login_redirect_view(request):
     """
-    Trạm kiểm tra: Ai là Giáo viên thì bế vào phòng GV,
+    kiểm tra:
+    Ai là Giáo viên thì bế vào phòng GV,
     Ai là Học sinh thì bế vào phòng HS.
     """
     if request.user.is_teacher():
@@ -336,7 +335,7 @@ def export_class_students(request, class_id):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="Danh_sach_lop_{classroom.id}.csv"'
 
-    # Tuyệt chiêu BOM UTF-8 giúp Excel đọc Tiếng Việt mượt mà
+    # BOM UTF-8 giúp Excel đọc Tiếng Việt mượt mà
     response.write('\ufeff'.encode('utf8'))
 
     writer = csv.writer(response)

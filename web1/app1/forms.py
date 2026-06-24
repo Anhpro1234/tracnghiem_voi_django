@@ -9,10 +9,8 @@ class CustomLoginForm(LoginForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Sửa nội dung lỗi sai tài khoản/mật khẩu (Thay cho câu tiếng Anh trên hình)
         self.error_messages['LOGIN_FAILED'] = 'Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại!'
 
-        # (Tùy chọn) Sửa thêm thông báo nếu người dùng để trống ô nhập liệu
         if 'login' in self.fields:
             self.fields['login'].error_messages['required'] = 'Vui lòng nhập tên tài khoản hoặc email.'
         if 'password' in self.fields:
@@ -22,7 +20,6 @@ class CustomLoginForm(LoginForm):
 # ==========================================
 # 2. FORM ĐĂNG KÝ (Giữ nguyên code cũ của bạn)
 # ==========================================
-# KHÔNG import allauth.account.forms.SignupForm ở đây nữa để tránh lỗi vòng tròn!
 class CustomSignupForm(forms.Form):
     # Khai báo trường chọn quyền
     role = forms.ChoiceField(
