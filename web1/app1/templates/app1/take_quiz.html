@@ -1,0 +1,68 @@
+{% extends 'app1/base.html' %}
+
+{% block content %}
+<style>
+    .quiz-container { max-width: 800px; margin: auto; padding: 20px; }
+
+    /* Box câu hỏi */
+    .quiz-card {
+        margin-bottom: 25px;
+        padding: 20px;
+        border-radius: 12px;
+        background-color: #ffffff; /* Ép nền trắng cho box */
+        border: 1px solid #dee2e6;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* Ép màu chữ đen đậm để dễ đọc */
+    .quiz-card p, .choice-label {
+        color: #333333 !important;
+        font-weight: 500;
+    }
+
+    /* Lựa chọn đáp án */
+    .choice-label {
+        display: block;
+        padding: 12px 15px;
+        margin: 8px 0;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid #ced4da;
+        transition: 0.2s;
+    }
+    .choice-label:hover { background-color: #f8f9fa; }
+
+    /* Input radio cho thẳng hàng */
+    .choice-label input { margin-right: 10px; }
+</style>
+
+<div class="quiz-container">
+    <h2 class="text-center text-primary mb-4">{{ quiz.title }}</h2>
+    <p class="text-center">Mã phòng: <strong>{{ quiz.room_id }}</strong></p>
+    <hr>
+
+    <form method="POST">
+        {% csrf_token %}
+        {% for q in questions %}
+            <div class="quiz-card">
+                <p class="fw-bold">Câu {{ forloop.counter }}: {{ q.content }}</p>
+
+                <div class="ps-3">
+                    {% for choice in q.shuffled_choices %}
+                        <label class="choice-label">
+                            <input type="radio" name="question_{{ q.id }}" value="{{ choice.id }}">
+                            {{ choice.content }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-center text-muted">Đề thi hiện chưa có câu hỏi nào.</p>
+        {% endfor %}
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg px-5">Nộp bài</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

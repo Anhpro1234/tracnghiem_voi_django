@@ -1,0 +1,274 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <style>
+    /* Chỉ ẩn con trỏ mặc định trên thiết bị CÓ CHUỘT (Máy tính) */
+    @media (pointer: fine) {
+        body, a, button, .clickable, p, span, h1, h2, h3, h4, h5, h6, input, textarea, label, .theme-switch, .btn, .navbar-toggler {
+            cursor: none !important;
+        }
+    }
+
+    /* Khung chung cho con trỏ GIF/WebP */
+    #custom-cursor {
+        width: 32px;
+        height: 32px;
+        position: fixed;
+        top: 0; left: 0;
+        pointer-events: none;
+        z-index: 999999;
+        background-size: contain;
+        background-repeat: no-repeat;
+        display: none; /* JS sẽ lo việc bật lên */
+        will-change: transform; /* Bật tăng tốc GPU cho siêu mượt */
+    }
+
+    /* Các trạng thái ảnh */
+    #custom-cursor.normal       { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
+    #custom-cursor.link         { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
+    #custom-cursor.text         { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
+    #custom-cursor.move         { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
+    #custom-cursor.unavailable  { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
+    #custom-cursor.working      { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
+    #custom-cursor.help         { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
+
+    /* TRÊN ĐIỆN THOẠI/TABLET: Tự động vô hiệu hóa con trỏ custom */
+    @media (pointer: coarse) {
+        #custom-cursor { display: none !important; }
+        * { cursor: auto !important; }
+    }
+
+    .search-box {
+        position: relative;
+        height: 45px;
+        width: 45px;
+        background-color: var(--bs-tertiary-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 50px;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+    }
+    /* Khi click vào icon -> mở rộng ra */
+    .search-box.active {
+        width: 300px;
+        background-color: var(--bs-body-bg);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .search-input {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: transparent;
+        outline: none;
+        color: var(--bs-heading-color);
+        font-size: 16px;
+        padding-left: 20px;
+        padding-right: 45px; /* Chừa chỗ cho icon */
+        opacity: 0;
+        transition: opacity 0.4s;
+        pointer-events: none;
+    }
+    .search-box.active .search-input {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .search-btn {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 45px;
+        height: 45px;
+        background: transparent;
+        border: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--bs-heading-color);
+        z-index: 1;
+        transition: 0.3s;
+    }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" type="image/png" href="{% static 'app1/images/Avatar_Hoshimi_Miyabi.png' %}?v=10.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'app1/css/main.css' %}?v=4.0" rel="stylesheet" />
+    <title>Web của bố m</title>
+</head>
+<body>
+
+<div id="custom-cursor" class="normal"></div>
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary shadow-sm mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand clickable" href="{% url 'home' %}">
+        <img src="{% static 'app1/images/mibiandualuoi.png' %}" height="50" width="50" alt="Logo"/>
+    </a>
+    <button class="navbar-toggler clickable" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link active clickable" href="{% url 'home' %}">Trang chủ</a></li>
+
+        {% if user.is_authenticated %}
+            {% if user.is_teacher %}
+                <li class="nav-item"><a class="nav-link clickable fw-bold text-primary" href="{% url 'teacher_room' %}">🏫 Phòng Giáo viên</a></li>
+            {% elif user.is_student %}
+                <li class="nav-item"><a class="nav-link clickable fw-bold text-success" href="{% url 'student_room' %}">🎓 Phòng Học sinh</a></li>
+            {% endif %}
+        {% endif %}
+      </ul>
+
+      <div class="d-flex align-items-center gap-3">
+
+          <label class="theme-switch clickable" title="Bật/tắt Dark Mode">
+            <input type="checkbox" class="theme-switch__checkbox" id="darkModeToggle">
+            <div class="theme-switch__container">
+              <div class="theme-switch__clouds"></div>
+              <div class="theme-switch__stars-container">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M32 41C32 41.5523 31.5523 42 31 42C30.4477 42 30 41.5523 30 41C30 40.4477 30.4477 40 31 40C31.5523 40 32 40.4477 32 41ZM107 22C107 22.5523 106.552 23 106 23C105.448 23 105 22.5523 105 22C105 21.4477 105.448 21 106 21C106.552 21 107 21.4477 107 22ZM26 27.5C26 28.3284 25.3284 29 24.5 29C23.6716 29 23 28.3284 23 27.5C23 26.6716 23.6716 26 24.5 26C25.3284 26 26 26.6716 26 27.5ZM86 35.5C86 36.3284 85.3284 37 84.5 37C83.6716 37 83 36.3284 83 35.5C83 34.6716 83.6716 34 84.5 34C85.3284 34 86 34.6716 86 35.5ZM103 11.5C103 12.3284 102.328 13 101.5 13C100.672 13 100 12.3284 100 11.5C100 10.6716 100.672 10 101.5 10C102.328 10 103 10.6716 103 11.5ZM25 15C25 15.5523 24.5523 16 24 16C23.4477 16 23 15.5523 23 15C23 14.4477 23.4477 14 24 14C24.5523 14 25 14.4477 25 15ZM74 15C74 15.5523 73.5523 16 73 16C72.4477 16 72 15.5523 72 15C72 14.4477 72.4477 14 73 14C73.5523 14 74 14.4477 74 15ZM59 2.5C59 3.32843 58.3284 4 57.5 4C56.6716 4 56 3.32843 56 2.5C56 1.67157 56.6716 1 57.5 1C58.3284 1 59 1.67157 59 2.5ZM55 45.5C55 46.3284 54.3284 47 53.5 47C52.6716 47 52 46.3284 52 45.5C52 44.6716 52.6716 44 53.5 44C54.3284 44 55 44.6716 55 45.5ZM121 28.5C121 29.3284 120.328 30 119.5 30C118.672 30 118 29.3284 118 28.5C118 27.6716 118.672 27 119.5 27C120.328 27 121 27.6716 121 28.5ZM134 36.5C134 37.3284 133.328 38 132.5 38C131.672 38 131 37.3284 131 36.5C131 35.6716 131.672 35 132.5 35C133.328 35 134 35.6716 134 36.5ZM140 16.5C140 17.3284 139.328 18 138.5 18C137.672 18 137 17.3284 137 16.5C137 15.6716 137.672 15 138.5 15C139.328 15 140 15.6716 140 16.5ZM144 47.5C144 48.3284 143.328 49 142.5 49C141.672 49 141 48.3284 141 47.5C141 46.6716 141.672 46 142.5 46C143.328 46 144 46.6716 144 47.5ZM10.5 36C11.3284 36 12 35.3284 12 34.5C12 33.6716 11.3284 33 10.5 33C9.67157 33 9 33.6716 9 34.5C9 35.3284 9.67157 36 10.5 36ZM5.5 10C6.32843 10 7 9.32843 7 8.5C7 7.67157 6.32843 7 5.5 7C4.67157 7 4 7.67157 4 8.5C4 9.32843 4.67157 10 5.5 10ZM13 54C13 54.5523 12.5523 55 12 55C11.4477 55 11 54.5523 11 54C11 53.4477 11.4477 53 12 53C12.5523 53 13 53.4477 13 54ZM101 40C101 40.5523 100.552 41 100 41C99.4477 41 99 40.5523 99 40C99 39.4477 99.4477 39 100 39C100.552 39 101 39.4477 101 40ZM114 9C114 9.55228 113.552 10 113 10C112.448 10 112 9.55228 112 9C112 8.44772 112.448 8 113 8C113.552 8 114 8.44772 114 9ZM125 50C125 50.5523 124.552 51 124 51C123.448 51 123 50.5523 123 50C123 49.4477 123.448 49 124 49C124.552 49 125 49.4477 125 50ZM66 28C66 28.5523 65.5523 29 65 29C64.4477 29 64 28.5523 64 28C64 27.4477 64.4477 27 65 27C65.5523 27 66 27.4477 66 28ZM44 19C44 19.5523 43.5523 20 43 20C42.4477 20 42 19.5523 42 19C42 18.4477 42.4477 18 43 18C43.5523 18 44 18.4477 44 19ZM47 31C47 31.5523 46.5523 32 46 32C45.4477 32 45 31.5523 45 31C45 30.4477 45.4477 30 46 30C46.5523 30 47 30.4477 47 31ZM22 4C22 4.55228 21.5523 5 21 5C20.4477 5 20 4.55228 20 4C20 3.44772 20.4477 3 21 3C21.5523 3 22 3.44772 22 4ZM87 18C87 18.5523 86.5523 19 86 19C85.4477 19 85 18.5523 85 18C85 17.4477 85.4477 17 86 17C86.5523 17 87 17.4477 87 18ZM97 3C97 3.55228 96.5523 4 96 4C95.4477 4 95 3.55228 95 3C95 2.44772 95.4477 2 96 2C96.5523 2 97 2.44772 97 3ZM128 17C128 17.5523 127.552 18 127 18C126.448 18 126 17.5523 126 17C126 16.4477 126.448 16 127 16C127.552 16 128 16.4477 128 17ZM130 6C130 6.55228 129.552 7 129 7C128.448 7 128 6.55228 128 6C128 5.44772 128.448 5 129 5C129.552 5 130 5.44772 130 6Z" fill="currentColor"></path>
+                </svg>
+              </div>
+              <div class="theme-switch__circle-container">
+                <div class="theme-switch__sun-moon-container">
+                  <div class="theme-switch__moon">
+                    <div class="theme-switch__spot"></div>
+                    <div class="theme-switch__spot"></div>
+                    <div class="theme-switch__spot"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </label>
+
+          <div class="search-box">
+            <input type="text" class="search-input clickable" placeholder="Tìm đề thi, lớp học...">
+            <div class="search-btn clickable">
+              <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <svg class="close-icon d-none" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+          </div>
+
+          {% if user.is_authenticated %}
+              <div class="dropdown">
+                  <button class="btn btn-outline-primary dropdown-toggle clickable fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      👋 Chào, {{ user.username }}
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                      <li><a class="dropdown-item clickable" href="#">Tài khoản của tôi</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li>
+                          <a class="dropdown-item text-danger clickable fw-bold" href="{% url 'account_logout' %}">🚪 Đăng xuất</a>
+                      </li>
+                  </ul>
+              </div>
+          {% else %}
+              <div class="d-flex gap-2">
+                  <a href="{% url 'account_login' %}" class="btn btn-primary clickable">Đăng nhập</a>
+                  <a href="{% url 'account_signup' %}" class="btn btn-outline-primary clickable">Đăng ký</a>
+              </div>
+          {% endif %}
+
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // 1. Xử lý Dark Mode
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggle = document.getElementById('darkModeToggle');
+        const htmlTag = document.documentElement;
+
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'dark') {
+            htmlTag.setAttribute('data-bs-theme', 'dark');
+            toggle.checked = true;
+        }
+
+        toggle.addEventListener('change', function() {
+            if (this.checked) {
+                htmlTag.setAttribute('data-bs-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                htmlTag.setAttribute('data-bs-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    });
+
+    // 2. Xử lý Search Bar Mở Rộng
+    document.addEventListener("DOMContentLoaded", () => {
+        const searchBox = document.querySelector('.search-box');
+        const searchBtn = document.querySelector('.search-btn');
+        const searchInput = document.querySelector('.search-input');
+        const searchIcon = document.querySelector('.search-icon');
+        const closeIcon = document.querySelector('.close-icon');
+
+        searchBtn.addEventListener('click', () => {
+            searchBox.classList.toggle('active');
+
+            if(searchBox.classList.contains('active')) {
+                searchInput.focus();
+                searchIcon.classList.add('d-none');
+                closeIcon.classList.remove('d-none');
+            } else {
+                searchInput.value = '';
+                searchIcon.classList.remove('d-none');
+                closeIcon.classList.add('d-none');
+            }
+        });
+    });
+
+    // 3. Rickroll chống F12 (Và chỉ chặn chuột phải im lặng)
+    (function () {
+        let triggered = false;
+        function activateRickroll() {
+            if (triggered) return;
+            triggered = true;
+            document.body.style.pointerEvents = 'none';
+            document.body.innerHTML = `
+            <div style="position:fixed; inset:0; background:radial-gradient(circle at top, rgba(255,255,255,0.95), rgba(245,247,250,0.98)); display:flex; align-items:center; justify-content:center; font-family:'Segoe UI',sans-serif; z-index:999999;">
+                <div style="width:min(500px,90%); background:rgba(255,255,255,0.75); backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.6); border-radius:24px; padding:40px; text-align:center; box-shadow: 0 20px 60px rgba(0,0,0,.08);">
+                    <div style="font-size:64px; margin-bottom:20px;">🤔😒</div>
+                    <h2 style="margin:0; color:#1f2937; font-size:28px;">Có vẻ bạn rất tò mò</h2>
+                    <p style="margin-top:15px; color:#6b7280; line-height:1.6;">Bạn tính làm gì Web tuôi? tính F12 à?<br>Chúng tôi đánh giá cao tinh thần khám phá đó.</p>
+                    <p style="margin-top:25px; color:#2563eb; font-weight:600;">Rất nhanh thôi :)...</p>
+                </div>
+            </div>`;
+            setTimeout(() => { window.location.replace('https://youtu.be/eioYulMp_5k?si=AC4hO8zQTmqJ2cjj'); }, 2500);
+        }
+        // CHỈ CHẶN CHUỘT PHẢI (Không ăn Troll)
+        document.addEventListener('contextmenu', e => {
+            e.preventDefault();
+        });
+        // ĂN TROLL NẾU BẤM F12
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))) {
+                e.preventDefault();
+                activateRickroll();
+            }
+        });
+        // ĂN TROLL NẾU MỞ DEVTOOLS TỪ MENU TRÌNH DUYỆT
+        setInterval(() => {
+            const widthDiff = window.outerWidth - window.innerWidth;
+            const heightDiff = window.outerHeight - window.innerHeight;
+            if (widthDiff > 160 || heightDiff > 160) { activateRickroll(); }
+        }, 500);
+    })();
+</script>
+<script src="{% static 'app1/js/cursor.js' %}"></script>
+</body>
+</html>

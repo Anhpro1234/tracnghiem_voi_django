@@ -1,0 +1,107 @@
+{% extends 'app1/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow-sm border-0 h-100 border-start border-primary border-4" style="background-color: var(--bs-tertiary-bg);">
+            <div class="card-body">
+                <h5 class="card-title text-primary mb-3">Vào phòng thi</h5>
+                <form method="POST" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <input type="text" name="room_id" class="form-control clickable" placeholder="Nhập mã phòng thi (VD: 183667)" required>
+                    <button type="submit" name="btn_vao_thi" class="btn btn-primary text-nowrap clickable">Vào thi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <div class="card shadow-sm border-0 h-100 border-start border-success border-4" style="background-color: var(--bs-tertiary-bg);">
+            <div class="card-body">
+                <h5 class="card-title text-success mb-3">Tham gia lớp học</h5>
+                <form method="POST" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <input type="text" name="class_code" class="form-control clickable" placeholder="Nhập mã lớp (VD: X8K9AB)" required>
+                    <button type="submit" name="btn_tham_gia_lop" class="btn btn-success text-nowrap clickable">Gửi yêu cầu</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close clickable" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card p-4 shadow-sm border-0" style="background-color: var(--bs-body-bg);">
+    <h4 class="mb-4" style="color: var(--bs-heading-color);">📚 Lớp học của tôi</h4>
+
+    <ul class="nav nav-tabs mb-4" id="studentTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active clickable fw-bold" id="joined-tab" data-bs-toggle="tab" data-bs-target="#joined" type="button" role="tab" aria-controls="joined" aria-selected="true">
+                Lớp đã tham gia <span class="badge bg-success ms-1">{{ joined_classes.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link clickable fw-bold" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="false">
+                Chờ GV xác nhận <span class="badge bg-warning text-dark ms-1">{{ pending_classes.count }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="studentTabContent">
+
+        <div class="tab-pane fade show active" id="joined" role="tabpanel" aria-labelledby="joined-tab">
+            {% if joined_classes %}
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    {% for item in joined_classes %}
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm" style="background-color: var(--bs-tertiary-bg);">
+                                <div class="card-body">
+                                    <h5 class="card-title text-success fw-bold">{{ item.classroom.name }}</h5>
+                                    <p class="card-text mb-1" style="color: var(--bs-body-color);">Mã lớp: <strong class="text-primary">{{ item.classroom.class_code }}</strong></p>
+                                    <p class="card-text text-muted">Giáo viên: {{ item.classroom.teacher.get_full_name|default:item.classroom.teacher.username }}</p>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 pb-3">
+                                    <button class="btn btn-outline-success btn-sm w-100 clickable">Vào xem tài liệu</button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <h5 class="text-muted">Bạn chưa được duyệt vào lớp học nào.</h5>
+                    <p class="text-muted mb-0">Hãy nhập mã lớp ở phía trên để xin tham gia nhé!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="tab-pane fade" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+            {% if pending_classes %}
+                <div class="list-group shadow-sm">
+                    {% for item in pending_classes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center border-start border-warning border-4 py-3" style="background-color: var(--bs-tertiary-bg);">
+                            <div>
+                                <h6 class="mb-1 fw-bold" style="color: var(--bs-heading-color);">{{ item.classroom.name }}</h6>
+                                <small class="text-muted">Gửi yêu cầu lúc: {{ item.created_at|date:"H:i - d/m/Y" }}</small>
+                            </div>
+                            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Đang chờ duyệt...</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <p class="text-muted mb-0">Không có yêu cầu nào đang chờ xác nhận.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

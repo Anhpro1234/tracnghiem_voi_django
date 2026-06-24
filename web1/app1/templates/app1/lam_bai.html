@@ -1,0 +1,163 @@
+{% extends 'app1/base.html' %}
+
+{% block content %}
+<style>
+    /* CSS Lấy cảm hứng từ TurnioDev */
+    body { background-color: #f4f7f6; }
+    .quiz-container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+    /* Logic ẩn/hiện câu hỏi */
+    .question-card { display: none; animation: fadeIn 0.4s ease; }
+    .question-card.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Làm đẹp nút chọn đáp án */
+    .choice-label {
+        display: block; padding: 15px 20px; margin-bottom: 15px;
+        border: 2px solid #eef2f5; border-radius: 10px; cursor: pointer;
+        font-size: 1.1em; transition: all 0.2s ease-in-out;
+    }
+    .choice-label:hover { border-color: #0d6efd; background: #f8fbff; }
+    input[type="radio"] { display: none; } /* Giấu chấm tròn mặc định */
+    input[type="radio"]:checked + .choice-label {
+        background: #0d6efd; color: white; border-color: #0d6efd;
+    }
+
+    /* Bảng Navigation bên phải */
+    .nav-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .nav-btn {
+        width: 40px; height: 40px; border-radius: 8px; border: 2px solid #eef2f5;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; background: white; font-weight: bold; transition: 0.2s;
+    }
+    .nav-btn:hover { border-color: #0d6efd; }
+    .nav-btn.active { border-color: #0d6efd; transform: scale(1.1); box-shadow: 0 0 10px rgba(13,110,253,0.3); }
+    .nav-btn.answered { background: #198754; color: white; border-color: #198754; }
+</style>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <form method="POST" id="quizForm" class="quiz-container">
+            {% csrf_token %}
+
+            {% for q in questions %}
+            <div class="question-card" id="q-{{ forloop.counter }}">
+                <h4 style="color: #333; margin-bottom: 25px; line-height: 1.5;">
+                    <span style="color: #0d6efd;">Câu {{ forloop.counter }}/{{ questions|length }}:</span> {{ q.content }}
+                </h4>
+
+                <div class="choices-container">
+                    {% for choice in q.shuffled_choices %}
+                    <div>
+                        <input type="radio" name="question_{{ q.id }}" id="choice_{{ choice.id }}" value="{{ choice.id }}" onchange="markAnswered({{ forloop.parentloop.counter }})">
+                        <label class="choice-label" for="choice_{{ choice.id }}">
+                            {{ choice.content }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-between mt-4 border-top pt-3">
+                    <button type="button" class="btn btn-outline-secondary px-4" onclick="prevQuestion({{ forloop.counter }})" {% if forloop.first %}disabled{% endif %}>⬅ Trước</button>
+
+                    {% if forloop.last %}
+                        <button type="submit" class="btn btn-success px-4" onclick="return confirm('Bạn có chắc chắn muốn nộp bài?');">Nộp bài ngay 🚀</button>
+                    {% else %}
+                        <button type="button" class="btn btn-primary px-4" onclick="nextQuestion({{ forloop.counter }})">Tiếp theo ➡</button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </form>
+    </div>
+
+    <div class="col-md-4">
+        <div class="quiz-container sticky-top" style="top: 20px;">
+            <h5 class="text-center text-muted mb-2">⏱ Thời gian còn lại</h5>
+            <h1 class="text-center text-danger font-weight-bold" id="timer">--:--</h1>
+
+            <hr class="my-4">
+
+            <h6 class="mb-3">📌 Danh sách câu hỏi:</h6>
+            <div class="nav-grid">
+                {% for q in questions %}
+                <div class="nav-btn" id="nav-btn-{{ forloop.counter }}" onclick="jumpToQuestion({{ forloop.counter }})">
+                    {{ forloop.counter }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-4 border-top pt-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Tiến độ làm bài:</span>
+                    <strong id="progress-text">0/{{ questions|length }}</strong>
+                </div>
+                <div class="progress" style="height: 12px; border-radius: 10px;">
+                    <div id="progress-bar" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // === LOGIC XỬ LÝ GIAO DIỆN SPA (Single Page Application) ===
+    let currentQ = 1;
+    const totalQ = {{ questions|length }};
+    let answeredCount = 0;
+
+    // Hiển thị câu đầu tiên khi mới vào
+    document.getElementById('q-1').classList.add('active');
+    document.getElementById('nav-btn-1').classList.add('active');
+
+    function jumpToQuestion(num) {
+        // Tắt câu hiện tại
+        document.getElementById(`q-${currentQ}`).classList.remove('active');
+        document.getElementById(`nav-btn-${currentQ}`).classList.remove('active');
+        // Mở câu mới
+        currentQ = num;
+        document.getElementById(`q-${currentQ}`).classList.add('active');
+        document.getElementById(`nav-btn-${currentQ}`).classList.add('active');
+    }
+
+    function nextQuestion(num) { if(num < totalQ) jumpToQuestion(num + 1); }
+    function prevQuestion(num) { if(num > 1) jumpToQuestion(num - 1); }
+
+    function markAnswered(num) {
+        let navBtn = document.getElementById(`nav-btn-${num}`);
+        if (!navBtn.classList.contains('answered')) {
+            navBtn.classList.add('answered'); // Đổi màu xanh
+            answeredCount++;
+            updateProgress();
+        }
+        // Hiệu ứng UX xịn: Chọn đáp án xong tự động nhảy sang câu tiếp theo sau 0.4s
+        setTimeout(() => {
+            if (num < totalQ) nextQuestion(num);
+        }, 400);
+    }
+
+    function updateProgress() {
+        document.getElementById('progress-text').innerText = `${answeredCount}/${totalQ}`;
+        let percent = (answeredCount / totalQ) * 100;
+        document.getElementById('progress-bar').style.width = `${percent}%`;
+    }
+
+    // === LOGIC ĐỒNG HỒ ĐẾM NGƯỢC ===
+    // Lấy thời gian từ model Quiz (duration tính bằng phút)
+    let timeLeft = {{ quiz.duration|default:45 }} * 60;
+    let timerElement = document.getElementById('timer');
+
+    let timerInterval = setInterval(() => {
+        if(timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("Đã hết thời gian làm bài! Hệ thống sẽ tự động thu bài.");
+            document.getElementById('quizForm').submit(); // Tự động nộp
+        } else {
+            let m = Math.floor(timeLeft / 60);
+            let s = timeLeft % 60;
+            timerElement.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+            timeLeft--;
+        }
+    }, 1000);
+</script>
+{% endblock %}

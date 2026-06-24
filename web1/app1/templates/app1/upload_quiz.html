@@ -1,0 +1,29 @@
+{% extends 'app1/base.html' %}
+
+{% block content %}
+    <h2>Tạo Đề Thi Trắc Nghiệm Tự Động</h2>
+    <p>Giáo viên chọn Môn học và file Word (.docx) để hệ thống tự phân tích.</p>
+
+    <form action="" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 15px;">
+            <label for="subject_id"><b>Chọn Môn học:</b></label><br>
+            <select name="subject_id" id="subject_id" required style="padding: 5px; width: 300px;">
+                <option value="">-- Click để chọn môn học --</option>
+                {% for sub in subjects %}
+                    <option value="{{ sub.id }}">{{ sub }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="word_file"><b>Chọn file Word (.docx):</b></label><br>
+            <input type="file" id="word_file" name="word_file" accept=".docx" required>
+        </div>
+
+        <button type="submit" style="padding: 8px 20px; background: blue; color: white; border: none; border-radius: 5px; cursor: pointer;">Bắt đầu Tạo Đề</button>
+    </form>
+
+    <hr>
+    {% endblock %}

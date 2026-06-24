@@ -1,0 +1,84 @@
+{% extends 'app1/base.html' %}
+
+{% block content %}
+<div class="card p-4 shadow-sm border-0">
+    <h3 class="mb-4 text-primary">Phòng Học Sinh</h3>
+
+    <form method="POST" class="row g-3 mb-4 align-items-center">
+        {% csrf_token %}
+        <div class="col-auto">
+            <input type="text" name="ma_lop_nhap" class="form-control clickable" placeholder="Nhập mã lớp (VD: MAT101)" required>
+        </div>
+        <div class="col-auto">
+            <button type="submit" name="btn_tham_gia" class="btn btn-primary clickable">Tham gia lớp</button>
+        </div>
+    </form>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <ul class="nav nav-tabs mb-3" id="studentTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active clickable" id="joined-tab" data-bs-toggle="tab" data-bs-target="#joined" type="button" role="tab">
+                Lớp đã tham gia <span class="badge bg-success">{{ lop_da_tham_gia.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link clickable" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                Chờ GV xác nhận <span class="badge bg-warning text-dark">{{ lop_cho_xac_nhan.count }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="studentTabContent">
+        
+        <div class="tab-pane fade show active" id="joined" role="tabpanel">
+            {% if lop_da_tham_gia %}
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    {% for item in lop_da_tham_gia %}
+                        <div class="col">
+                            <div class="card h-100 border-start border-success border-4 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title text-success">{{ item.lop.ten_lop }}</h5>
+                                    <p class="card-text text-muted mb-1">Mã lớp: <strong>{{ item.lop.ma_lop }}</strong></p>
+                                    <p class="card-text text-muted">Giáo viên: {{ item.lop.giao_vien.get_full_name|default:item.lop.giao_vien.username }}</p>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 pb-3">
+                                    <a href="#" class="btn btn-outline-success btn-sm w-100 clickable">Vào lớp học</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Bạn chưa tham gia lớp học nào. Hãy nhập mã lớp ở trên để xin tham gia!</p>
+            {% endif %}
+        </div>
+
+        <div class="tab-pane fade" id="pending" role="tabpanel">
+            {% if lop_cho_xac_nhan %}
+                <div class="list-group">
+                    {% for item in lop_cho_xac_nhan %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center border-start border-warning border-4">
+                            <div>
+                                <h6 class="mb-1 text-dark">{{ item.lop.ten_lop }}</h6>
+                                <small class="text-muted">Yêu cầu gửi lúc: {{ item.ngay_gui|date:"H:i - d/m/Y" }}</small>
+                            </div>
+                            <span class="badge bg-warning text-dark">Đang chờ duyệt...</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Không có yêu cầu nào đang chờ xác nhận.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

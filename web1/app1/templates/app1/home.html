@@ -1,0 +1,15 @@
+{% extends 'app1/base.html' %}
+
+{% block content %}
+    <h6>Muốn đẹp hơn thì đi mà thêm code</h6>
+
+    <hr>
+    <h2 style="color: #ff6600;">Khu vực Hệ thống</h2>
+    <ul>
+    <li><a href="{% url 'account_login' %}">🚪 Đăng nhập (Login)</a></li>
+    <li><a href="{% url 'teacher_room' %}">👨‍🏫 Vào phòng Test Giáo viên</a></li>
+    <li><a href="{% url 'student_room' %}">👨‍🎓 Vào phòng Test Học sinh</a></li>
+    <li><a href="{% url 'account_logout' %}">👋 Đăng xuất</a></li>
+    <li><a href="/admin/">⚙️ Trang quản trị Admin</a></li>
+</ul>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "app1/base.html" %}
+{% load static %}
+
+{% block content %}
+<link href="{% static 'app1/css/index.css' %}?v=2.1" rel="stylesheet" />
+<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+
+<div class="glass-universe" style="background-image: url('{% static 'app1/images/background.jpg' %}?v=2');">
+    <div class="glass-wrapper" style="width: 480px; margin-top: 20px;">
+        <div class="form-box register">
+            <h2>Sign Up</h2>
+
+            <form method="POST" action="{% url 'account_signup' %}">
+                {% csrf_token %}
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" name="email" value="{{ form.email.value|default_if_none:'' }}" required id="id_email" placeholder=" ">
+                    <label>Email</label>
+                </div>
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="person"></ion-icon></span>
+                    <input type="text" name="username" value="{{ form.username.value|default_if_none:'' }}" required id="id_username" placeholder=" ">
+                    <label>Username</label>
+                </div>
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="school"></ion-icon></span>
+                    <select name="role" required id="id_role" style="cursor: pointer; background: transparent; color: white;">
+                        <option value="" disabled selected hidden></option>
+                        <option value="student" style="color: #000;">👨‍🎓 Học sinh</option>
+                        <option value="teacher" style="color: #000;">👩‍🏫 Giáo viên</option>
+                    </select>
+                    <label>Bạn là ai?</label>
+                </div>
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                    <input type="password" name="password" required id="id_password" placeholder=" ">
+                    <label>Password</label>
+                </div>
+
+                <button type="submit" class="btn-glass clickable" style="margin-top: 15px;">Sign Up</button>
+
+                <div class="login-register">
+                    <p>Already have an account? <a href="{% url 'account_login' %}" class="clickable">Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="dashboard-footer">
+        <p>Art by <a href="https://www.pixiv.net/en/users/27848445" class="clickable" target="_blank">@Coria</a></p>
+    </footer>
+</div>
+{% endblock %}

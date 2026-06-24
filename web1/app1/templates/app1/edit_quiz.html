@@ -1,0 +1,57 @@
+{% extends 'app1/base.html' %}
+
+{% block content %}
+<div style="font-family: Arial; padding: 20px;">
+    <h2>Chỉnh sửa đề thi: {{ quiz.title }}</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="padding: 10px; background: #d4edda; color: #155724; margin-bottom: 10px;">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {% if questions %}
+            {% for question in questions %}
+                <div style="margin-bottom: 25px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; background-color: #f9f9f9;">
+                    <p style="font-weight: bold; font-size: 1.1em; color: #333;">
+                        Câu {{ forloop.counter }}: {{ question.content }}
+                    </p>
+
+                    <div style="margin-left: 20px;">
+                        {% for choice in question.choices.all %}
+                            <div style="margin-bottom: 8px; display: flex; align-items: center;">
+                                <input type="radio" name="q_{{ question.id }}" value="{{ choice.id }}"
+                                       id="c_{{ choice.id }}"
+                                       {% if choice.is_correct %}checked{% endif %}
+                                       style="margin-right: 10px; transform: scale(1.2);">
+
+                                <label for="c_{{ choice.id }}" style="cursor: pointer; font-size: 1em; color: #555;">
+                                    {{ choice.content }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;">
+                <button type="submit" name="save" style="padding: 10px 20px; background: blue; color: white; border: none; cursor: pointer; border-radius: 4px;">
+                    Lưu đáp án
+                </button>
+                <button type="submit" name="publish" style="padding: 10px 20px; background: green; color: white; border: none; cursor: pointer; border-radius: 4px; margin-left: 10px;">
+                     Xuất đề
+                </button>
+            </div>
+        {% else %}
+            <p style="color: red;">Đề thi này chưa có câu hỏi nào. Hãy kiểm tra lại file Word!</p>
+        {% endif %}
+    </form>
+
+    <div style="margin-top: 20px;">
+        <a href="{% url 'teacher_room' %}">⬅️ Quay về phòng Giáo viên</a>
+    </div>
+</div>
+{% endblock %}

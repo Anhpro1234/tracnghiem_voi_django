@@ -1,0 +1,150 @@
+{% extends "app1/base.html" %}
+{% load static %}
+
+{% block content %}
+</div> <link href="{% static 'app1/css/index.css' %}?v=2.2" rel="stylesheet" />
+<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+
+<style>
+/* --- CSS CHO POPUP NOTIFICATION GLASSMORPHISM --- */
+.glass-toast {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    z-index: 9999999;
+    background: rgba(220, 38, 38, 0.25);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 100, 100, 0.3);
+    border-left: 5px solid #ff4d4d;
+    border-radius: 12px;
+    padding: 16px 24px;
+    color: white;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    /* Hiệu ứng trượt mượt mà */
+    animation: slideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.glass-toast .icon-warning {
+    font-size: 24px;
+    color: #ff4d4d;
+    margin-top: 2px;
+}
+
+.glass-toast .toast-text p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.glass-toast .toast-text p:not(:last-child) {
+    margin-bottom: 6px;
+}
+
+.glass-toast .close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px;
+    opacity: 0.7;
+    padding: 0;
+    transition: 0.3s;
+    outline: none;
+}
+
+.glass-toast .close-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Keyframes Animation */
+@keyframes slideIn {
+    0% { transform: translateX(120%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    0% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(120%); opacity: 0; }
+}
+</style>
+
+<div class="glass-universe" style="background-image: url('{% static 'app1/images/background.jpg' %}?v=2'); min-height: 100vh;">
+
+    {% if form.errors %}
+    <div id="error-toast" class="glass-toast">
+        <ion-icon name="warning" class="icon-warning"></ion-icon>
+        <div class="toast-text">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <p><strong>{{ field.label }}:</strong> {{ error }}</p>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        <button class="close-btn clickable" onclick="closeToast()"><ion-icon name="close-outline"></ion-icon></button>
+    </div>
+    {% endif %}
+    <div class="glass-wrapper" style="width: 480px;">
+        <div class="form-box register">
+            <h2>Sign Up</h2>
+
+            <form method="POST" action="{% url 'account_signup' %}">
+                {% csrf_token %}
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" name="email" value="{{ form.email.value|default_if_none:'' }}" required id="id_email" placeholder=" ">
+                    <label>Email</label>
+                </div>
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="person"></ion-icon></span>
+                    <input type="text" name="username" value="{{ form.username.value|default_if_none:'' }}" required id="id_username" placeholder=" ">
+                    <label>Username</label>
+                </div>
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                    <input type="password" name="password1" required id="id_password" placeholder=" ">
+                    <label>Password</label>
+                </div>
+
+                <button type="submit" class="btn-glass clickable" style="margin-top: 15px;">Sign Up</button>
+
+                <div class="login-register">
+                    <p>Already have an account? <a href="{% url 'account_login' %}" class="clickable">Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="dashboard-footer">
+        <p>Art by <a href="https://www.pixiv.net/en/users/27848445" class="clickable" target="_blank">@Coria</a></p>
+    </footer>
+</div>
+
+<script>
+    function closeToast() {
+        const toast = document.getElementById('error-toast');
+        if (toast) {
+            toast.style.animation = 'slideOut 0.5s forwards';
+            // Đợi animation chạy xong thì xóa luôn element khỏi HTML
+            setTimeout(() => toast.remove(), 500);
+        }
+    }
+
+    // Tự động đóng Popup sau 6 giây
+    setTimeout(() => {
+        closeToast();
+    }, 5000);
+</script>
+
+<div class="container d-none">
+{% endblock %}
