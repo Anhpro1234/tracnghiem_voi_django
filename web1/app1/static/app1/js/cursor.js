@@ -56,7 +56,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 3. Ẩn/Hiện mượt mà khi chuột ra/vào cửa sổ trình duyệt
-    document.addEventListener('mouseleave', () => cursor.classList.add('is-hidden'));
-    document.addEventListener('mouseenter', () => cursor.classList.remove('is-hidden'));
 });

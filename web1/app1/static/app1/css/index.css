@@ -27,7 +27,6 @@
     transition: background 0.5s ease, border 0.5s ease, color 0.5s ease, transform 0.3s ease !important;
 }
 
-/* ĐÃ FIX LỖI THIẾU DẤU SAO (*) Ở ĐÂY */
 * {
     margin: 0;
     padding: 0;
@@ -126,26 +125,6 @@
     transform: translateY(-50%);
     color: var(--icon-color) !important;
 }
-
-/* ===== REMEMBER & FORGOT ===== */
-.remember-forgot {
-    font-size: .9em;
-    margin: -15px 0 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--form-text);
-}
-.remember-forgot a {
-    color: var(--form-text);
-    text-decoration: none;
-    opacity: 0.8;
-}
-.remember-forgot a:hover {
-    opacity: 1;
-    text-decoration: underline;
-}
-
 /* ===== BUTTON ===== */
 .btn-glass {
     width: 100%;

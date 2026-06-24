@@ -142,7 +142,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'login_redirect'
 AUTH_USER_MODEL = 'app1.User'
-# Điều hướng sau khi Đăng nhập và Đăng xuất thành công
 LOGOUT_REDIRECT_URL = 'home'  # Trở về Trang chủ
 ALLOWED_HOSTS = ['.ngrok-free.app', 'localhost', '127.0.0.1']
 STATIC_URL = 'static/'

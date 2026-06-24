@@ -580,22 +580,6 @@
   transition: width 0.25s ease, height 0.25s ease, background-color 0.25s ease, opacity 0.25s ease;
 }
 
-/* 3. Hiệu ứng khi lướt qua link hoặc button (JS kích hoạt class này) */
-.custom-cursor.cursor-active {
-  width: 45px;
-  height: 45px;
-  background-color: rgba(0, 123, 255, 0.1);
-  border-color: #007bff;
-}
 
-/* 4. Ẩn hoàn toàn trên điện thoại/máy tính bảng (vì không có chuột) */
-@media (pointer: coarse) {
-  .custom-cursor {
-    display: none !important;
-  }
-  html, body {
-    cursor: auto;
-  }
-}
 
-/* Xóa hết mấy dòng class .normal, .link... ở cuối file main.css đi nhé! */
+

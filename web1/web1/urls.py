@@ -7,6 +7,6 @@ urlpatterns = [
     # 1. Allauth lo hết phần Account (Login, Signup, Logout, Password)
     path('accounts/', include('allauth.urls')),
 
-    # 2. Các chức năng của app1 (Gọn gàng trong 1 dòng)
+    # 2. Các chức năng của app1
     path('', include('app1.urls')),
 ]
