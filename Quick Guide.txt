@@ -1,0 +1,58 @@
+# QUICK GUIDE (IF YOU'RE TOO LAZY TO READ THE README) 
+
+## Requirements
+* Pycharm 
+* Python 3.10+
+* MySQL 8.0+
+* Git
+
+## Local Setup
+
+1. Clone & Virtual Env
+git clone https://github.com/Anhpro1234/tracnghiem_voi_django.git
+cd tracnghiem_voi_django
+python -m venv venv
+
+Activate Environment:
+* Windows: venv\Scripts\activate
+* Linux / macOS: source venv/bin/activate
+
+2. Install Dependencies
+pip install -r requirements.txt
+
+3. Configure Environment Variables
+Copy file .env.example to .env and update your MySQL information:
+
+DB_NAME=web1
+DB_USER=root
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=3306
+
+4. Database Setup
+First, open your MySQL terminal/workbench and create the database:
+CREATE DATABASE web1;
+
+Then, apply migrations and create an admin account:
+python manage.py migrate
+python manage.py createsuperuser
+
+5. Run Server
+python manage.py runserver
+
+ Open link at: http://127.0.0.1:8000
+
+## Main Features
+* User Authentication (Teacher / Student Roles)
+* Classroom Creation & Enrollment
+* Quiz Creation & Management (Word .docx Import supported)
+* Online Exam System (Automatic Scoring & Result Tracking)
+* Dedicated Dashboards (Teacher / Student / Admin)
+
+## Useful Commands (Copy & Paste)
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+
+Good luck and may your traceback be short. 
