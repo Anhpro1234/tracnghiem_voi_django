@@ -34,32 +34,49 @@
 @keyframes slideIn { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
 @keyframes slideOut { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(120%); opacity: 0; } }
 
-/* --- CSS BỔ SUNG CHO REMEMBER ME & SHOW PASSWORD --- */
+/* --- CSS BỔ SUNG CHO REMEMBER ME, FORGOT PASSWORD & REGISTER --- */
 .remember-forgot {
     display: flex;
     justify-content: space-between;
     font-size: 0.9em;
-    margin: -15px 0 20px; /* Căn chỉnh khoảng cách */
+    margin: -15px 0 20px;
 }
 .remember-forgot label {
     display: flex;
     align-items: center;
-    color: white;
-    cursor: none; /* Vì sếp đã dùng custom cursor */
+    color: var(--bs-heading-color); /* Tự đổi màu theo Sáng/Tối */
+    cursor: none;
 }
 .remember-forgot label input {
-    accent-color: #fff;
+    accent-color: var(--bs-primary); /* Tick box xịn hơn */
     margin-right: 5px;
 }
 .remember-forgot a {
-    color: white;
+    color: var(--bs-heading-color); /* Tự đổi màu theo Sáng/Tối */
     text-decoration: none;
+    font-weight: 500;
 }
 .remember-forgot a:hover {
     text-decoration: underline;
+    color: var(--bs-primary);
 }
+
+/* Xử lý luôn chữ phần Đăng Ký cho đồng bộ */
+.login-register p {
+    color: var(--bs-heading-color);
+}
+.login-register a {
+    color: var(--bs-heading-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+.login-register a:hover {
+    text-decoration: underline;
+    color: var(--bs-primary);
+}
+
 .input-box .icon.clickable-icon {
-    pointer-events: auto; /* Cho phép click vào icon Mắt */
+    pointer-events: auto;
     cursor: none;
 }
 </style>
