@@ -169,10 +169,10 @@
                   </ul>
               </div>
           {% else %}
-              <div class="d-flex gap-2">
-                  <a href="{% url 'account_login' %}" class="btn btn-primary clickable">Đăng nhập</a>
-                  <a href="{% url 'account_signup' %}" class="btn btn-outline-primary clickable">Đăng ký</a>
-              </div>
+          <div class="d-flex gap-2">
+                <a href="{% url 'account_login' %}?action=login" class="btn btn-primary clickable">Đăng nhập</a>
+                <a href="{% url 'account_login' %}?action=signup" class="btn btn-outline-primary clickable">Đăng ký</a>
+          </div>
           {% endif %}
 
       </div>

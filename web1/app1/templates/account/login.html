@@ -6,23 +6,13 @@
 <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
 
 <style>
-/* --- CSS CHO POPUP NOTIFICATION --- */
+/* --- CSS POPUP NOTIFICATION --- */
 .glass-toast {
-    position: fixed;
-    top: 30px;
-    right: 30px;
-    z-index: 9999999;
-    background: rgba(220, 38, 38, 0.25);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 100, 100, 0.3);
-    border-left: 5px solid #ff4d4d;
-    border-radius: 12px;
-    padding: 16px 24px;
-    color: white;
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
+    position: fixed; top: 30px; right: 30px; z-index: 9999999;
+    background: rgba(220, 38, 38, 0.25); backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 100, 100, 0.3);
+    border-left: 5px solid #ff4d4d; border-radius: 12px; padding: 16px 24px;
+    color: white; display: flex; align-items: flex-start; gap: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     animation: slideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
@@ -30,54 +20,60 @@
 .glass-toast .toast-text p { margin: 0; font-size: 0.95rem; line-height: 1.5; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .glass-toast .close-btn { background: none; border: none; color: white; font-size: 22px; opacity: 0.7; padding: 0; transition: 0.3s; outline: none; }
 .glass-toast .close-btn:hover { opacity: 1; transform: scale(1.1); }
-
 @keyframes slideIn { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
 @keyframes slideOut { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(120%); opacity: 0; } }
 
-/* --- CSS BỔ SUNG CHO REMEMBER ME, FORGOT PASSWORD & REGISTER --- */
-.remember-forgot {
-    display: flex;
-    justify-content: space-between;
+/* --- CSS BỔ SUNG CHO CÁC PHẦN TỬ --- */
+.remember-forgot { display: flex; justify-content: space-between; font-size: 0.9em; margin: -15px 0 20px; }
+.remember-forgot label { display: flex; align-items: center; color: var(--bs-heading-color); cursor: none; }
+.remember-forgot label input { accent-color: var(--bs-primary); margin-right: 5px; }
+.remember-forgot a { color: var(--bs-heading-color); text-decoration: none; font-weight: 500; cursor: pointer; }
+.remember-forgot a:hover { text-decoration: underline; color: var(--bs-primary); }
+.login-register p { color: var(--bs-heading-color); }
+.login-register a { color: var(--bs-heading-color); font-weight: 600; text-decoration: none; cursor: pointer; }
+.login-register a:hover { text-decoration: underline; color: var(--bs-primary); }
+.input-box .icon.clickable-icon { pointer-events: auto; cursor: pointer; }
+
+/* ======================================================== */
+/* ===== HỆ THỐNG TRƯỢT 3 MÀN HÌNH & TỰ ĐỘNG CĂN CHIỀU CAO === */
+/* ======================================================== */
+.glass-wrapper {
+    width: 480px;
+    /* XÓA ĐI DÒNG height: 550px Ở ĐÂY ĐỂ TRÁNH TRANH CHẤP VỚI JAVASCRIPT */
+    overflow: hidden;
+    position: relative;
+    transition: height 0.4s ease-in-out; /* Bắt buộc có dòng này để co dãn chiều cao mượt mà */
+}
+
+.form-box {
+    width: 100%;
+    padding: 40px;
+    position: absolute;
+    top: 0;
+    transition: transform 0.5s ease-in-out;
+}
+
+/* --- Vị trí mặc định --- */
+.form-box.forgot { left: -100%; transform: translateX(0); }
+.form-box.login { left: 0; transform: translateX(0); }
+.form-box.register { left: 100%; transform: translateX(0); }
+
+/* --- Trạng thái 1: Bấm Đăng ký (Trượt cả 3 khối sang trái 100%) --- */
+.glass-wrapper.active-register .form-box.forgot { transform: translateX(-100%); }
+.glass-wrapper.active-register .form-box.login { transform: translateX(-100%); }
+.glass-wrapper.active-register .form-box.register { transform: translateX(-100%); }
+
+/* --- Trạng thái 2: Bấm Quên Mật Khẩu (Trượt cả 3 khối sang phải 100%) --- */
+.glass-wrapper.active-forgot .form-box.forgot { transform: translateX(100%); }
+.glass-wrapper.active-forgot .form-box.login { transform: translateX(100%); }
+.glass-wrapper.active-forgot .form-box.register { transform: translateX(100%); }
+
+/* Chỉnh một chút cho chữ trong form Forgot Password */
+.forgot-text {
     font-size: 0.9em;
-    margin: -15px 0 20px;
-}
-.remember-forgot label {
-    display: flex;
-    align-items: center;
-    color: var(--bs-heading-color); /* Tự đổi màu theo Sáng/Tối */
-    cursor: none;
-}
-.remember-forgot label input {
-    accent-color: var(--bs-primary); /* Tick box xịn hơn */
-    margin-right: 5px;
-}
-.remember-forgot a {
-    color: var(--bs-heading-color); /* Tự đổi màu theo Sáng/Tối */
-    text-decoration: none;
-    font-weight: 500;
-}
-.remember-forgot a:hover {
-    text-decoration: underline;
-    color: var(--bs-primary);
-}
-
-/* Xử lý luôn chữ phần Đăng Ký cho đồng bộ */
-.login-register p {
     color: var(--bs-heading-color);
-}
-.login-register a {
-    color: var(--bs-heading-color);
-    font-weight: 600;
-    text-decoration: none;
-}
-.login-register a:hover {
-    text-decoration: underline;
-    color: var(--bs-primary);
-}
-
-.input-box .icon.clickable-icon {
-    pointer-events: auto;
-    cursor: none;
+    text-align: center;
+    margin-bottom: 20px;
 }
 </style>
 
@@ -99,41 +95,79 @@
         <button class="close-btn clickable" onclick="closeToast()"><ion-icon name="close-outline"></ion-icon></button>
     </div>
     {% endif %}
-    <div class="glass-wrapper" style="width: 480px;">
+
+    <div class="glass-wrapper {% if 'signup' in request.path %}active-register{% elif 'password/reset' in request.path %}active-forgot{% endif %}">
+
+        <div class="form-box forgot">
+            <h2>Reset Password</h2>
+            <p class="forgot-text">Enter your email address and we will send you a link to reset your password.</p>
+            <form method="POST" action="{% url 'account_reset_password' %}">
+                {% csrf_token %}
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" name="email" required id="id_email_reset" placeholder=" ">
+                    <label>Email Address</label>
+                </div>
+                <button type="submit" class="btn-glass clickable" style="margin-top: 15px;">Send Reset Link</button>
+                <div class="login-register">
+                    <p>Remembered your password? <a class="login-link">Back to Login</a></p>
+                </div>
+            </form>
+        </div>
+
         <div class="form-box login">
             <h2>Login</h2>
-
             <form method="POST" action="{% url 'account_login' %}">
                 {% csrf_token %}
-
                 <div class="input-box">
                     <span class="icon"><ion-icon name="mail"></ion-icon></span>
                     <input type="text" name="login" required id="id_login" placeholder=" ">
                     <label>Username or Email</label>
                 </div>
-
                 <div class="input-box">
-                    <span class="icon clickable clickable-icon" onclick="togglePassword()">
+                    <span class="icon clickable-icon" onclick="togglePassword()">
                         <ion-icon name="eye-off-outline" id="toggle-eye"></ion-icon>
                     </span>
                     <input type="password" name="password" required id="id_password" placeholder=" ">
                     <label>Password</label>
                 </div>
-
                 <div class="remember-forgot">
-                    <label class="clickable">
-                        <input type="checkbox" name="remember" id="id_remember"> Remember me
-                    </label>
-                    <a href="{% url 'forgot_password' %}" class="clickable">Forgot Password?</a>
+                    <label class="clickable"><input type="checkbox" name="remember" id="id_remember"> Remember me</label>
+                    <a class="forgot-link">Forgot Password?</a>
                 </div>
-
                 <button type="submit" class="btn-glass clickable">Login</button>
-
                 <div class="login-register">
-                    <p>Don't have an account? <a href="{% url 'account_signup' %}" class="clickable">Register</a></p>
+                    <p>Don't have an account? <a class="register-link">Register</a></p>
                 </div>
             </form>
         </div>
+
+        <div class="form-box register">
+            <h2>Sign Up</h2>
+            <form method="POST" action="{% url 'account_signup' %}">
+                {% csrf_token %}
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" name="email" value="{{ form.email.value|default_if_none:'' }}" required id="id_email_reg" placeholder=" ">
+                    <label>Email</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="person"></ion-icon></span>
+                    <input type="text" name="username" value="{{ form.username.value|default_if_none:'' }}" required id="id_username_reg" placeholder=" ">
+                    <label>Username</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                    <input type="password" name="password1" required id="id_password1_reg" placeholder=" ">
+                    <label>Password</label>
+                </div>
+                <button type="submit" class="btn-glass clickable" style="margin-top: 15px;">Sign Up</button>
+                <div class="login-register">
+                    <p>Already have an account? <a class="login-link">Login</a></p>
+                </div>
+            </form>
+        </div>
+
     </div>
 
     <footer class="dashboard-footer">
@@ -142,7 +176,7 @@
 </div>
 
 <script>
-    // 1. Script ẩn Popup
+    // 1. JS XỬ LÝ POPUP LỖI (TOAST)
     function closeToast() {
         const toast = document.getElementById('error-toast');
         if (toast) {
@@ -152,19 +186,96 @@
     }
     setTimeout(() => { closeToast(); }, 5000);
 
-    // 2. Script Ẩn/Hiện Mật khẩu
+    // 2. JS HIỂN THỊ PASSWORD MẮT NHẮM/MỞ
     function togglePassword() {
         const passInput = document.getElementById('id_password');
         const eyeIcon = document.getElementById('toggle-eye');
-
         if (passInput.type === "password") {
             passInput.type = "text";
-            eyeIcon.setAttribute('name', 'eye-outline'); // Đổi icon thành mở mắt
+            eyeIcon.setAttribute('name', 'eye-outline');
         } else {
             passInput.type = "password";
-            eyeIcon.setAttribute('name', 'eye-off-outline'); // Đổi icon thành nhắm mắt
+            eyeIcon.setAttribute('name', 'eye-off-outline');
         }
     }
+
+    // 3. JS XỬ LÝ NHÃN (LABEL) KHÔNG BỊ ĐÈ CHỮ
+    const inputs = document.querySelectorAll('.input-box input');
+    inputs.forEach(input => {
+        if(input.value.trim() !== '') input.classList.add('has-value');
+
+        input.addEventListener('input', () => {
+            if(input.value.trim() !== '') input.classList.add('has-value');
+            else input.classList.remove('has-value');
+        });
+    });
+
+    // 4. JS XỬ LÝ TRƯỢT MÀN HÌNH & TỰ ĐỘNG CĂN CHIỀU CAO (AUTO-RESIZE)
+    const glassWrapper = document.querySelector('.glass-wrapper');
+    const formLogin = document.querySelector('.form-box.login');
+    const formRegister = document.querySelector('.form-box.register');
+    const formForgot = document.querySelector('.form-box.forgot');
+
+    const registerLink = document.querySelector('.register-link');
+    const forgotLink = document.querySelector('.forgot-link');
+    const loginLinks = document.querySelectorAll('.login-link');
+
+    // Hàm đo chiều cao động dựa theo khối đang được kích hoạt
+    function autoResize() {
+        if (glassWrapper.classList.contains('active-register')) {
+            glassWrapper.style.height = formRegister.offsetHeight + 'px';
+        } else if (glassWrapper.classList.contains('active-forgot')) {
+            glassWrapper.style.height = formForgot.offsetHeight + 'px';
+        } else {
+            glassWrapper.style.height = formLogin.offsetHeight + 'px';
+        }
+    }
+
+    // Chạy đo chiều cao ngay khi web load xong để vừa khít lần đầu tiên
+    window.addEventListener('load', () => {
+        // 1. Vẫn chạy hàm đo chiều cao mặc định
+        autoResize();
+
+        // 2. Bắt mạch xem người dùng có bấm từ thanh Navbar ở trên không
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+
+        if (action === 'signup') {
+            // Đẩy trượt sang khung Đăng ký
+            glassWrapper.classList.remove('active-forgot');
+            glassWrapper.classList.add('active-register');
+            autoResize();
+        }
+        else if (action === 'login') {
+            // Trượt về lại khung Đăng nhập (nằm giữa)
+            glassWrapper.classList.remove('active-register', 'active-forgot');
+            autoResize();
+        }
+    });
+
+    registerLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        glassWrapper.classList.remove('active-forgot');
+        glassWrapper.classList.add('active-register');
+        autoResize();
+    });
+
+    // Bấm Forgot Password -> Trượt phải & Co dãn theo khối Forgot
+    forgotLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        glassWrapper.classList.remove('active-register');
+        glassWrapper.classList.add('active-forgot');
+        autoResize();
+    });
+
+    // Bấm Back to Login -> Về giữa & Co dãn theo khối Login
+    loginLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            glassWrapper.classList.remove('active-register', 'active-forgot');
+            autoResize();
+        });
+    });
 </script>
 
 <div class="container d-none">
