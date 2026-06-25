@@ -77,11 +77,12 @@ python manage.py runserver
 6. Open your browser and navigate to:
 ```
 http://localhost:8000
+or http://127.0.0.1:8000
 ```
 
 ## Usage
 
-- Create quizzes through the admin panel or web interface
+- Create quizzes through the teacher viewpoint 
 - Share quiz links with students or learners
 - Track quiz performance and results
 - View detailed analytics and statistics

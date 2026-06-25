@@ -76,12 +76,13 @@ python manage.py runserver
 
 6. Mở trình duyệt và điều hướng đến:
 ```
-http://localhost:8000
+http://localhost:8000 
+hoặc http://127.0.0.1:8000
 ```
 
 ## Sử Dụng
 
-- Tạo trắc nghiệm thông qua bảng điều khiển quản trị hoặc giao diện web
+- Tạo trắc nghiệm thông qua bảng điều khiển của giáo viên
 - Chia sẻ liên kết trắc nghiệm với học sinh hoặc người học tập
 - Theo dõi hiệu suất và kết quả trắc nghiệm
 - Xem chi tiết phân tích và thống kê
