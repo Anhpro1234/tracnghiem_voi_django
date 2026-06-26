@@ -22,16 +22,7 @@
     --label-color: rgba(0, 0, 0, 0.7);
 }
 
-/* HIỆU ỨNG CHUYỂN MÀU MỊN MÀNG CHO TOÀN BỘ WEB */
-.glass-wrapper, .input-box, .input-box input, .input-box label, .btn-glass, .dashboard-footer {
-    transition: background 0.5s ease, border 0.5s ease, color 0.5s ease, transform 0.3s ease !important;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 .glass-universe {
     font-family: 'Poppins', sans-serif !important;
@@ -45,72 +36,75 @@
     background-position: center;
     background-attachment: fixed;
 }
+.glass-universe * { font-family: 'Poppins', sans-serif !important; }
 
-.glass-universe * {
-    font-family: 'Poppins', sans-serif !important;
-}
-
-/* ===== GLASS WRAPPER ===== */
+/* ===== GLASS WRAPPER (TỰ ĐỘNG THAY ĐỔI CHIỀU CAO) ===== */
 .glass-wrapper {
     position: relative;
-    width: 420px;
+    width: 480px;
+    height: 520px;
     background: var(--form-bg);
     border: 2px solid var(--form-border);
-    color: var(--form-text) !important;
     border-radius: 20px !important;
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
-    padding: 40px;
+    overflow: hidden;
     z-index: 2;
+    transition: height 0.4s ease-in-out, background 0.5s ease, border 0.5s ease; /* Thêm hiệu ứng co giãn chiều cao */
 }
+
+/* ===== HỆ THỐNG TRƯỢT 3 MÀN HÌNH ====== */
+.form-box {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    padding: 40px;
+    transition: transform 0.6s ease-in-out;
+}
+
+/* --- Vị trí mặc định (Khối Login đứng giữa) --- */
+.form-box.forgot { left: -100%; transform: translateX(0); }
+.form-box.login { left: 0; transform: translateX(0); }
+.form-box.register { left: 100%; transform: translateX(0); }
+
+/* --- Bấm Đăng Ký (Trượt tất cả sang TRÁI) --- */
+.glass-wrapper.active-register .form-box.forgot { transform: translateX(-100%); }
+.glass-wrapper.active-register .form-box.login { transform: translateX(-100%); }
+.glass-wrapper.active-register .form-box.register { transform: translateX(-100%); }
+
+/* --- Bấm Quên Mật Khẩu (Trượt tất cả sang PHẢI) --- */
+.glass-wrapper.active-forgot .form-box.forgot { transform: translateX(100%); }
+.glass-wrapper.active-forgot .form-box.login { transform: translateX(100%); }
+.glass-wrapper.active-forgot .form-box.register { transform: translateX(100%); }
+
 
 .glass-wrapper h2 {
-    font-size: 2em;
-    text-align: center;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: var(--form-text) !important;
+    font-size: 2em; text-align: center; font-weight: 600;
+    margin-bottom: 20px; color: var(--form-text) !important;
 }
 
-/* ===== INPUT BOXES ===== */
+/* ===== INPUT BOXES VÀ ANIMATION NHÔ NHÃN LABEL==*/
 .input-box {
-    position: relative;
-    width: 100%;
-    height: 50px;
+    position: relative; width: 100%; height: 50px;
     border-bottom: 2px solid var(--form-text) !important;
     margin: 30px 0;
 }
-
 .input-box label {
-    position: absolute;
-    top: 50%;
-    left: 5px;
-    transform: translateY(-50%);
-    font-size: 1em;
-    font-weight: 500;
-    pointer-events: none;
-    transition: .3s;
-    color: var(--label-color) !important;
+    position: absolute; top: 50%; left: 5px;
+    transform: translateY(-50%); font-size: 1em; font-weight: 500;
+    pointer-events: none; transition: .3s; color: var(--label-color) !important;
+}
+.input-box input {
+    width: 100%; height: 100%; background: transparent !important;
+    border: none !important; outline: none !important; font-size: 1em !important;
+    color: var(--form-text) !important; padding: 0 35px 0 5px !important;
 }
 
-.input-box input,
-.input-box select {
-    width: 100%;
-    height: 100%;
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    font-size: 1em !important;
-    color: var(--form-text) !important;
-    padding: 0 35px 0 5px !important;
-}
-
+/* Kéo label lên nếu Input bị focus, HOẶC nếu Input có chứa class 'has-value' (Do JS quản lý) */
 .input-box input:focus ~ label,
 .input-box input:valid ~ label,
-.input-box input:not(:placeholder-shown) ~ label,
-.input-box select:focus ~ label,
-.input-box select:valid ~ label {
+.input-box input.has-value ~ label {
     top: -5px !important;
     font-size: 0.85em !important;
     color: var(--form-text) !important;
@@ -118,81 +112,31 @@
 }
 
 .input-box .icon {
-    position: absolute;
-    right: 8px;
-    font-size: 1.2em;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--icon-color) !important;
+    position: absolute; right: 8px; font-size: 1.2em; top: 50%;
+    transform: translateY(-50%); color: var(--icon-color) !important;
 }
+
 /* ===== BUTTON ===== */
 .btn-glass {
-    width: 100%;
-    height: 45px;
-    background: var(--btn-bg) !important;
-    border: none !important;
-    color: var(--btn-text) !important;
-    border-radius: 6px !important;
-    cursor: pointer;
-    font-weight: 700 !important;
-    transition: 0.3s;
-    font-size: 1.1rem;
+    width: 100%; height: 45px; background: var(--btn-bg) !important;
+    border: none !important; color: var(--btn-text) !important;
+    border-radius: 6px !important; cursor: pointer; font-weight: 700 !important;
+    transition: 0.3s; font-size: 1.1rem;
 }
-.btn-glass:hover {
-    opacity: 0.8;
-    transform: scale(1.02);
-}
+.btn-glass:hover { opacity: 0.8; transform: scale(1.02); }
 
-/* ===== REGISTER LINK ===== */
-.login-register {
-    font-size: .9em;
-    text-align: center;
-    margin-top: 20px;
-    color: var(--form-text);
-}
-.login-register a {
-    font-weight: 600;
-    text-decoration: underline;
-    color: var(--form-text);
-}
+/* ===== REGISTER/LOGIN LINK ===== */
+.login-register { font-size: .9em; text-align: center; margin-top: 20px; color: var(--form-text); }
+.login-register a { font-weight: 600; text-decoration: underline; color: var(--form-text); cursor: pointer; }
 
-/* ===== FOOTER DẠNG VIÊN THUỐC ĐỒNG BỘ MÀU ===== */
+/* ===== FOOTER ===== */
 .dashboard-footer {
-    position: absolute;
-    bottom: 20px;
-    padding: 8px 24px;
-    background: var(--form-bg);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 2px solid var(--form-border);
-    border-radius: 50px !important;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    font-size: 0.75rem;
-    color: var(--form-text);
-    transition: 0.3s;
-    z-index: 2;
+    position: absolute; bottom: 20px; padding: 8px 24px;
+    background: var(--form-bg); backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px); border: 2px solid var(--form-border);
+    border-radius: 50px !important; box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    text-align: center; font-size: 0.75rem; color: var(--form-text); transition: 0.3s; z-index: 2;
 }
-.dashboard-footer a {
-    color: var(--form-text) !important;
-    text-decoration: none;
-    font-weight: 600;
-}
-.dashboard-footer:hover {
-    transform: scale(1.05);
-}
-
-/* Cục kính trắng độc lập cho các trang khác nếu cần */
-.glass-light {
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 5px;
-    padding: 40px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
-}
-.dashboard-footer p {
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1;
-}
+.dashboard-footer a { color: var(--form-text) !important; text-decoration: none; font-weight: 600; }
+.dashboard-footer:hover { transform: scale(1.05); }
+.dashboard-footer p { margin: 0 !important; padding: 0 !important; line-height: 1; }
