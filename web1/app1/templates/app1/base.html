@@ -22,17 +22,27 @@
         background-repeat: no-repeat;
         display: none; /* JS sẽ lo việc bật lên */
         will-change: transform; /* Bật tăng tốc GPU cho siêu mượt */
+
+        /* BẮT BUỘC: Căn tâm cho đầu mũi tên chuột giả trùng với tọa độ click thật */
+        margin-left: -16px;
+        margin-top: -16px;
     }
 
-    /* Các trạng thái ảnh */
+    /* Các trạng thái ảnh (Đã sửa đổi khớp hoàn toàn với Class của JavaScript) */
+    #custom-cursor,
     #custom-cursor.normal       { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
-    #custom-cursor.link         { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
-    #custom-cursor.text         { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
+    #custom-cursor.link      { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
+    #custom-cursor.text      { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
     #custom-cursor.move         { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
     #custom-cursor.unavailable  { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
     #custom-cursor.working      { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
     #custom-cursor.help         { background-image: url('{% static "app1/cursor/cursor.cur" %}'); }
 
+    /* Thêm trạng thái ẩn mượt mà khi di chuột ra khỏi trình duyệt */
+    #custom-cursor.is-hidden {
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
     /* TRÊN ĐIỆN THOẠI/TABLET: Tự động vô hiệu hóa con trỏ custom */
     @media (pointer: coarse) {
         #custom-cursor { display: none !important; }
