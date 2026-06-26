@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let mouseX = -100, mouseY = -100;
     let cursorX = -100, cursorY = -100;
-    const speed = 0.25; // Tốc độ trượt (0.1: siêu mượt/độ trễ cao, 1: dính sát chuột)
+    const speed = 1; // Tốc độ trượt (0.1: siêu mượt/độ trễ cao, 1: dính sát chuột)
 
     // Lấy tọa độ chuột thật liên tục
     document.addEventListener('mousemove', (e) => {
@@ -42,9 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Thêm class trạng thái tương ứng
         if (isTextInput) {
-            cursor.classList.add('is-text');
+            cursor.classList.add('text');
         } else {
-            cursor.classList.add('is-link');
+            cursor.classList.add('link');
         }
     });
 
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target.closest(interactiveSelector);
         if (target) {
             // Xóa toàn bộ class trạng thái khi chuột rời đi, trả về cursor mặc định
-            cursor.classList.remove('is-text', 'is-link');
+            cursor.classList.remove('text', 'link');
         }
     });
 
