@@ -41,8 +41,8 @@
     <p class="text-center">Mã phòng: <strong>{{ quiz.room_id }}</strong></p>
     <hr>
 
-    <form method="POST">
-        {% csrf_token %}
+    <form method="POST" id="exam-form">
+        {% csrf_token %}    
         {% for q in questions %}
             <div class="quiz-card">
                 <p class="fw-bold">Câu {{ forloop.counter }}: {{ q.content }}</p>
