@@ -37,7 +37,19 @@
                 </div>
             {% endfor %}
 
-            <div style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;">
+                <div style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;">
+                    <div style="margin-bottom: 20px; padding: 15px; background: #eef7ff; border-radius: 8px;">
+                        <label for="duration" style="font-weight: bold; font-size: 1.1em;">
+                             ⏱️ Thời gian làm bài (phút):
+                        </label>
+                        <input type="number" id="duration" name="duration_minutes"
+                            value="{{ quiz.duration_minutes }}"
+                            min="0" max="300" step="1"
+                            style="padding: 8px; width: 90px; margin-left: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <small style="display: block; margin-top: 5px; color: #555;">
+                             Để trống hoặc nhập 0 nếu không giới hạn thời gian.
+                        </small>
+                </div>
                 <button type="submit" name="save" style="padding: 10px 20px; background: blue; color: white; border: none; cursor: pointer; border-radius: 4px;">
                     Lưu đáp án
                 </button>

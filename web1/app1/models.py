@@ -63,7 +63,11 @@ class Quiz(models.Model):
         limit_choices_to={'role': 'TEACHER'},
         verbose_name="Người tạo"
     )
-    duration = models.IntegerField(default=45, help_text="Thời gian làm bài (phút)")
+    duration_minutes = models.PositiveIntegerField(
+        null=True, blank=True,
+        default=45,  # mặc định 45 phút
+        help_text="Để trống nếu không giới hạn thời gian"
+    )
     room_id = models.CharField(max_length=20, unique=True, verbose_name="Mã phòng thi")
     is_active = models.BooleanField(default=True)
     is_public = models.BooleanField(default=False)
@@ -101,3 +105,13 @@ class StudentAnswer(models.Model):
 
     class Meta:
         unique_together = ('user', 'quiz', 'question')
+
+class StudentExamSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    start_time = models.DateTimeField(auto_now_add=True)
+    end_time = models.DateTimeField()
+    is_completed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'quiz')

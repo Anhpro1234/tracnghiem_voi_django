@@ -552,34 +552,52 @@
   }
 }
 
-/* 1. Ẩn con trỏ mặc định trên máy tính */
-@media (pointer: fine) {
-  html, body {
-    cursor: none;
-  }
-
-  /* Đảm bảo các phần tử click được cũng mất con trỏ cũ */
-  a, button, select, input {
-    cursor: none !important;
-  }
+/* Container đồng hồ đếm ngược */
+.timer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 200px;                /* Đủ rộng cho 4 nhóm (ngày, giờ, phút, giây) sau khi thu nhỏ */
+    height: 48px;                /* Chiều cao cố định trong navbar */
+    margin: 0 0.5rem;
+    padding: 4px 8px;
+    background: var(--bs-tertiary-bg);
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow: visible;           /* Phải là visible để không cắt rotor */
 }
 
-/* 2. Định dạng vòng tròn Cursor tùy chỉnh */
-.custom-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #333;
-  border-radius: 50%;
-  pointer-events: none; /* Quan trọng: Ngăn chặn cursor chặn sự kiện click */
-  z-index: 99999;       /* Luôn nằm trên cùng */
-  opacity: 1;
-  box-sizing: border-box;
-  transition: width 0.25s ease, height 0.25s ease, background-color 0.25s ease, opacity 0.25s ease;
+/* Đồng hồ hệ thống (giữ nguyên của bạn) */
+.clock-box {
+    min-width: 90px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--bs-heading-color);
+    background: var(--bs-tertiary-bg);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 16px;
+    border: 1px solid var(--bs-border-color);
+    white-space: nowrap;
 }
 
-
-
-
+.timer-progress {
+    display: flex;
+    align-items: center;
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 20px;
+    padding: 4px 12px;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--bs-heading-color);
+    font-size: 16px;
+}
+.timer-text {
+    white-space: nowrap;
+}
+.progress {
+    background-color: var(--bs-border-color);
+    border-radius: 10px;
+}

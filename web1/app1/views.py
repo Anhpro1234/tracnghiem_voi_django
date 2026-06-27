@@ -11,7 +11,10 @@ from .models import Quiz, Question, Choice, Subject, StudentAnswer, Classroom, C
 import csv
 from django.http import HttpResponse
 from django.db.models import Count, Q
-
+import random, json
+from django.utils import timezone
+from .models import StudentExamSession
+from datetime import datetime, timedelta
 # Định nghĩa User ngay sau import
 User = get_user_model()
 # --- TIỆN ÍCH ---
@@ -162,20 +165,63 @@ def upload_create_quiz(request):
 @login_required(login_url='/accounts/login/')
 def edit_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
-    if quiz.creator != request.user: raise PermissionDenied()
+    if quiz.creator != request.user:
+        raise PermissionDenied()
+
     if request.method == 'POST':
+        # 1. Cập nhật đáp án đúng
         for question in quiz.questions.all():
             correct_id = request.POST.get(f'q_{question.id}')
             if correct_id:
                 question.choices.update(is_correct=False)
                 question.choices.filter(id=correct_id).update(is_correct=True)
+
+        # 2. Xử lý thời gian làm bài
+        duration_str = request.POST.get('duration_minutes', '').strip()
+
+        if duration_str and duration_str.isdigit():
+            new_duration = int(duration_str)
+            if new_duration >= 0:
+                quiz.duration_minutes = new_duration
+                quiz.save()
+
+                if new_duration > 0:
+                    # Cập nhật end_time cho các session chưa hoàn thành
+                    active_sessions = StudentExamSession.objects.filter(quiz=quiz, is_completed=False)
+                    for session in active_sessions:
+                        session.end_time = session.start_time + timedelta(minutes=new_duration)
+                        session.save()
+                    messages.success(request, f"Đã cập nhật thời gian làm bài: {new_duration} phút (áp dụng cho học sinh đang thi).")
+                else:
+                    # new_duration == 0: không giới hạn
+                    StudentExamSession.objects.filter(quiz=quiz, is_completed=False).delete()
+                    messages.success(request, "Đã tắt giới hạn thời gian. Học sinh có thể làm bài thoải mái.")
+            else:
+                # Số âm → đặt mặc định 30
+                quiz.duration_minutes = 30
+                quiz.save()
+                messages.info(request, "Thời gian làm bài được đặt mặc định 30 phút (không nhận giá trị âm).")
+        else:
+            # Không nhập gì → mặc định 30
+            quiz.duration_minutes = 30
+            quiz.save()
+            messages.info(request, "Thời gian làm bài được đặt mặc định 30 phút.")
+
+        # 3. Xử lý nút "Xuất đề" (kích hoạt)
         if 'publish' in request.POST:
             quiz.is_active = True
             quiz.save()
+            messages.success(request, "Đề thi đã được kích hoạt!")
             return redirect('teacher_room')
+
+        # 4. Nếu chỉ lưu (nút "Lưu đáp án & thời gian")
         return redirect('edit_quiz', quiz_id=quiz.id)
-    return render(request, 'app1/edit_quiz.html',
-                  {'quiz': quiz, 'questions': quiz.questions.prefetch_related('choices').all()})
+
+    # GET request
+    return render(request, 'app1/edit_quiz.html', {
+        'quiz': quiz,
+        'questions': quiz.questions.prefetch_related('choices').all(),
+    })
 
 
 @login_required(login_url='/accounts/login/')
@@ -190,26 +236,93 @@ def delete_quiz(request, quiz_id):
 def take_quiz(request, room_id):
     quiz = get_object_or_404(Quiz, room_id=room_id, is_active=True)
     questions = quiz.questions.prefetch_related('choices').all()
+
+    # 1. Xác định chế độ thời gian
+    if quiz.duration_minutes and quiz.duration_minutes > 0:
+        # Có giới hạn -> dùng StudentExamSession
+        session, created = StudentExamSession.objects.get_or_create(
+            user=request.user,
+            quiz=quiz,
+            defaults={'end_time': timezone.now() + timezone.timedelta(minutes=quiz.duration_minutes)}
+        )
+
+        if session.is_completed or timezone.now() >= session.end_time:
+            messages.warning(request, "Thời gian làm bài đã kết thúc hoặc bạn đã nộp bài.")
+            return redirect('view_result', room_id=room_id)
+
+        # Xử lý mã đề
+        if created or not session.shuffled_question_ids:
+            question_ids = list(questions.values_list('id', flat=True))
+            random.shuffle(question_ids)
+            session.shuffled_question_ids = question_ids
+
+            shuffled_choice_map = {}
+            for q in questions:
+                choice_ids = list(q.choices.values_list('id', flat=True))
+                random.shuffle(choice_ids)
+                shuffled_choice_map[str(q.id)] = choice_ids
+            session.shuffled_choice_ids = shuffled_choice_map
+            session.save()
+        else:
+            question_ids = session.shuffled_question_ids
+            shuffled_choice_map = session.shuffled_choice_ids
+
+        exam_end_time = session.end_time.isoformat()
+        total_minutes = quiz.duration_minutes
+
+    else:
+        # Không giới hạn thời gian -> không dùng session, xáo trộn mỗi lần
+        question_ids = list(questions.values_list('id', flat=True))
+        random.shuffle(question_ids)
+
+        shuffled_choice_map = {}
+        for q in questions:
+            choice_ids = list(q.choices.values_list('id', flat=True))
+            random.shuffle(choice_ids)
+            shuffled_choice_map[str(q.id)] = choice_ids
+
+        exam_end_time = ''
+        total_minutes = 0
+
+    # Sắp xếp lại danh sách câu hỏi
+    question_dict = {q.id: q for q in questions}
+    ordered_questions = [question_dict[qid] for qid in question_ids if qid in question_dict]
+
+    for q in ordered_questions:
+        choice_dict = {c.id: c for c in q.choices.all()}
+        choice_order = shuffled_choice_map.get(str(q.id), [])
+        q.shuffled_choices = [choice_dict[cid] for cid in choice_order if cid in choice_dict]
+
+    # 2. Xử lý POST nộp bài (chỉ có ý nghĩa với bài có giới hạn, nhưng vẫn cho nộp nếu không giới hạn)
     if request.method == 'POST':
         score = 0
         with transaction.atomic():
             StudentAnswer.objects.filter(user=request.user, quiz=quiz).delete()
-            for q in questions:
+            for q in ordered_questions:
                 choice_id = request.POST.get(f'question_{q.id}')
                 selected = Choice.objects.filter(id=choice_id, question=q).first() if choice_id else None
                 is_correct = selected.is_correct if selected else False
-                if is_correct: score += 1
-                StudentAnswer.objects.create(user=request.user, quiz=quiz, question=q, selected_choice=selected,
-                                             is_correct=is_correct)
+                if is_correct:
+                    score += 1
+                StudentAnswer.objects.create(
+                    user=request.user, quiz=quiz, question=q,
+                    selected_choice=selected, is_correct=is_correct
+                )
         request.session[f'score_{quiz.id}'] = score
+
+        # Nếu có session, đánh dấu hoàn thành
+        if 'session' in locals():
+            session.is_completed = True
+            session.save()
+
         return redirect('view_result', room_id=room_id)
 
-    for q in questions:
-        q.shuffled_choices = list(q.choices.all())
-        random.shuffle(q.shuffled_choices)
-
-    return render(request, 'app1/take_quiz.html', {'quiz': quiz, 'questions': questions})
-
+    return render(request, 'app1/take_quiz.html', {
+        'quiz': quiz,
+        'questions': ordered_questions,
+        'exam_end_time': exam_end_time,
+        'total_minutes': total_minutes,
+    })
 
 @login_required(login_url='/accounts/login/')
 def view_result(request, room_id):
@@ -386,3 +499,6 @@ def export_quiz_results(request, quiz_id):
         writer.writerow([idx, student_name, score, date_str])
 
     return response
+
+
+

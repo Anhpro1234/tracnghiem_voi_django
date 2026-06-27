@@ -54,6 +54,9 @@
         z-index: 1;
         transition: 0.3s;
     }
+    .clock-box {
+        min-width: 90px; text-align: center;
+    }
     </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -89,7 +92,20 @@
       </ul>
 
       <div class="d-flex align-items-center gap-3">
-
+        <span id="system-clock" class="clock-box"></span>
+        <div class="timer" id="flipdown-container" style="display: none;">
+        <div id="flipdown"></div>
+        </div>
+        <div class="timer-progress" id="exam-timer-container" style="display: none;">
+            <span id="exam-timer-text" class="timer-text">⏳ --:--</span>
+            <div class="progress" style="height: 5px; width: 80px; margin-left: 8px;">
+                <div id="exam-timer-bar" class="progress-bar bg-warning" style="width: 100%;"></div>
+            </div>
+        </div>
+          <script>
+            window.EXAM_END_TIME = "{{ exam_end_time|default:'' }}";
+            window.TOTAL_MINUTES = {{ total_minutes|default:0 }};
+          </script>
           <label class="theme-switch clickable" title="Bật/tắt Dark Mode">
             <input type="checkbox" class="theme-switch__checkbox" id="darkModeToggle">
             <div class="theme-switch__container">
@@ -196,6 +212,31 @@
         });
     });
 
+    const clock = document.getElementById('system-clock');
+
+
+    if (clock) {
+            setInterval(() => clock.textContent = new Date().toLocaleTimeString('vi-VN'), 1000);
+        }
+
+    if (timerText) {
+        const endTime = new Date("{{ exam_end_time|default:'2026-06-27T23:59:59' }}").getTime();
+        const countdown = setInterval(() => {
+            const dist = endTime - new Date().getTime();
+                if (dist < 0) {
+                    clearInterval(countdown);
+                    timerText.textContent = "00:00";
+                    document.getElementById('timeout-popup').classList.remove('d-none');
+                    const form = document.getElementById('exam-form');
+                    if(form) form.submit();
+                } else {
+                    const m = Math.floor((dist % 3600000) / 60000);
+                    const s = Math.floor((dist % 60000) / 1000);
+                    timerText.textContent = `⏳ ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                }
+            }, 1000);
+        }
+
     // 3. Rickroll chống F12 (Và chỉ chặn chuột phải im lặng)
     (function () {
         let triggered = false;
@@ -233,5 +274,9 @@
         }, 500);
     })();
 </script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flipdown@0.3.2/dist/flipdown.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flipdown@0.3.2/dist/flipdown.min.js"></script>
+<script>    window.EXAM_END_TIME = "{{ exam_end_time|default:'' }}"; </script>
+<script src="{% static 'app1/js/FlipClock.js' %}"></script>
 </body>
 </html>
