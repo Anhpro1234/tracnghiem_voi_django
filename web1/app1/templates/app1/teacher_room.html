@@ -1,8 +1,11 @@
 {% extends 'app1/base.html' %}
+{% load static %} {% block content %}
+<link href="{% static 'app1/css/teacher-room.css' %}" rel="stylesheet" />
 
-{% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4" style="color: var(--bs-heading-color);">Phòng làm việc: <span class="text-primary">{{ user.username }}</span></h2>
+    <div class="mb-4 fs-4 fw-bold" style="color: var(--bs-heading-color);">
+        Chào mừng trở lại, <span class="text-primary">{{ user.username }}👋 </span>
+    </div>
 
     {% if messages %}
         {% for message in messages %}
@@ -15,10 +18,10 @@
 
     <ul class="nav nav-tabs" id="myTab" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active fw-bold clickable" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz" type="button" role="tab">📚 Quản lý Đề thi</button>
+        <button class="nav-link active fw-bold clickable" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz" type="button" role="tab">Quản lý đề thi</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link fw-bold clickable" id="class-tab" data-bs-toggle="tab" data-bs-target="#class" type="button" role="tab">🏫 Quản lý Lớp học</button>
+        <button class="nav-link fw-bold clickable" id="class-tab" data-bs-toggle="tab" data-bs-target="#class" type="button" role="tab">Quản lý lớp</button>
       </li>
     </ul>
 
@@ -27,12 +30,11 @@
       <div class="tab-pane fade show active p-4 border border-top-0 rounded-bottom" style="background-color: var(--bs-body-bg);" id="quiz" role="tabpanel">
           <div class="d-flex justify-content-between align-items-center mb-4">
               <h4 class="m-0">Danh sách đề thi của bạn:</h4>
-              <a href="{% url 'upload_create_quiz' %}" class="btn btn-success clickable">+ Tạo đề thi mới</a>
+              <a href="{% url 'upload_create_quiz' %}" class="btn btn-success fw-bold shadow-sm clickable">+ Tạo đề thi mới</a>
           </div>
           <div class="table-responsive">
-             <table class="table table-striped table-hover table-bordered align-middle">
-                 <thead class="table-dark">
-                     <tr>
+             <table class="table table-striped table-hover table-bordered align-middle custom-ux-table">
+                 <thead class="table-light-ux"> <tr>
                          <th>Tên đề</th>
                          <th class="text-center">Mã phòng</th>
                          <th class="text-center">Trạng thái</th>
@@ -42,7 +44,7 @@
                  <tbody>
                      {% for quiz in my_quizzes %}
                      <tr>
-                         <td>{{ quiz.title }}</td>
+                         <td class="fw-medium">{{ quiz.title }}</td>
                          <td class="text-center fw-bold text-danger fs-5">{{ quiz.room_id }}</td>
                          <td class="text-center">
                              {% if quiz.is_active %}
@@ -51,12 +53,11 @@
                              <span class="badge bg-secondary px-3 py-2">Đang đóng</span>
                              {% endif %}
                          </td>
-                         <td class="text-center">
-                            <a href="{% url 'edit_quiz' quiz.id %}" class="btn btn-sm btn-primary clickable">Sửa</a>
-                            <a href="{% url 'export_quiz_results' quiz.id %}" class="btn btn-sm btn-info text-white clickable" title="Tải Bảng Điểm">
+                         <td class="text-center action-buttons"> <a href="{% url 'edit_quiz' quiz.id %}" class="btn btn-sm btn-primary action-safe clickable">Sửa</a>
+                            <a href="{% url 'export_quiz_results' quiz.id %}" class="btn btn-sm btn-outline-success action-secondary clickable" title="Tải Bảng Điểm">
                                 <ion-icon name="stats-chart-outline" style="vertical-align: middle;"></ion-icon> Điểm
                             </a>
-                            <a href="{% url 'delete_quiz' quiz.id %}" class="btn btn-sm btn-danger clickable" onclick="return confirm('Bạn có chắc muốn xóa đề này?');">Xóa</a>
+                            <a href="{% url 'delete_quiz' quiz.id %}" class="btn btn-sm btn-outline-danger action-danger clickable" onclick="return confirm('Bạn có chắc muốn xóa đề này?');">Xóa</a>
                          </td>
                      </tr>
                      {% endfor %}
@@ -70,7 +71,6 @@
           <div class="card shadow-sm border-0 border-start border-warning border-4 mb-4">
               <div class="card-body">
                   <h5 class="card-title text-warning mb-3">🔔 Yêu cầu vào lớp đang chờ duyệt</h5>
-
                   {% if pending_requests %}
                       <ul class="list-group">
                       {% for req in pending_requests %}
@@ -79,9 +79,9 @@
                                   Học sinh <strong>{{ req.student.username }}</strong> xin vào lớp <strong>{{ req.classroom.name }}</strong>
                                   <br><small class="text-muted">Gửi lúc: {{ req.created_at|date:"H:i - d/m/Y" }}</small>
                               </div>
-                              <div>
-                                  <a href="{% url 'handle_enrollment' req.id 'approve' %}" class="btn btn-success btn-sm clickable">Duyệt</a>
-                                  <a href="{% url 'handle_enrollment' req.id 'reject' %}" class="btn btn-danger btn-sm clickable">Từ chối</a>
+                              <div class="action-buttons">
+                                  <a href="{% url 'handle_enrollment' req.id 'approve' %}" class="btn btn-success btn-sm action-safe clickable">Duyệt</a>
+                                  <a href="{% url 'handle_enrollment' req.id 'reject' %}" class="btn btn-outline-danger btn-sm action-danger clickable">Từ chối</a>
                               </div>
                           </li>
                       {% endfor %}
@@ -93,16 +93,15 @@
           </div>
 
           <div class="d-flex justify-content-between align-items-center mb-4">
-              <h4 class="m-0">Danh sách Lớp học:</h4>
-              <button type="button" class="btn btn-primary clickable" data-bs-toggle="modal" data-bs-target="#createClassModal">
+              <h4 class="m-0">Danh sách lớp</h4>
+              <button type="button" class="btn btn-primary fw-bold shadow-sm clickable" data-bs-toggle="modal" data-bs-target="#createClassModal">
                 + Tạo Lớp Mới
               </button>
           </div>
 
           <div class="table-responsive">
-              <table class="table table-striped table-hover table-bordered align-middle">
-                  <thead class="table-dark">
-                      <tr>
+              <table class="table table-striped table-hover table-bordered align-middle custom-ux-table">
+                  <thead class="table-light-ux"> <tr>
                           <th class="text-center" style="width: 80px;">STT</th>
                           <th>Tên Lớp</th>
                           <th class="text-center text-warning">Mã Lớp (Gửi cho HS)</th>
@@ -119,15 +118,13 @@
                           <td class="text-center fw-bold fs-5 text-primary">{{ c.class_code }}</td>
                           <td class="text-center"><span class="badge bg-info">{{ c.students.count }}</span></td>
                           <td class="text-center">{{ c.created_at|date:"d/m/Y" }}</td>
-
-                          <td class="text-center">
-                              <a href="{% url 'view_class_students' c.id %}" class="btn btn-sm btn-primary text-white clickable">Xem HS</a>
-                              <a href="{% url 'export_class_students' c.id %}" class="btn btn-sm btn-success text-white clickable" title="Tải Danh Sách Lớp">
+                          <td class="text-center action-buttons"> <a href="{% url 'view_class_students' c.id %}" class="btn btn-sm btn-primary action-safe clickable">Xem HS</a>
+                              <a href="{% url 'export_class_students' c.id %}" class="btn btn-sm btn-outline-success action-secondary clickable" title="Tải Danh Sách Lớp">
                                   <ion-icon name="download-outline" style="vertical-align: middle;"></ion-icon> Tải DS
                               </a>
-                              <a href="{% url 'delete_class' c.id %}" class="btn btn-sm btn-danger clickable" onclick="return confirm('Xóa lớp này?');">Xóa</a>
+                              <a href="{% url 'delete_class' c.id %}" class="btn btn-sm btn-outline-danger action-danger clickable" onclick="return confirm('Xóa lớp này?');">Xóa</a>
                           </td>
-                          </tr>
+                      </tr>
                       {% endfor %}
                   </tbody>
               </table>
@@ -156,5 +153,4 @@
     </div>
   </div>
 </div>
-
-{% endblock %}  
+{% endblock %}

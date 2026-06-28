@@ -15,6 +15,9 @@ import random, json
 from django.utils import timezone
 from .models import StudentExamSession
 from datetime import datetime, timedelta
+from django.shortcuts import render, redirect
+from .models import Profile
+from django.contrib.auth import update_session_auth_hash
 # Định nghĩa User ngay sau import
 User = get_user_model()
 # --- TIỆN ÍCH ---
@@ -57,7 +60,8 @@ def teacher_room(request):
 
 @login_required(login_url='/accounts/login/')
 def student_room(request):
-    if not is_student(request.user): raise PermissionDenied("Bạn không có quyền vào phòng Học sinh!")
+    if not (is_student(request.user) or is_teacher(request.user)):
+        raise PermissionDenied("Bạn không có quyền vào phòng Học sinh!")
     user = request.user
 
     joined_classes = ClassEnrollment.objects.filter(student=user, status='APPROVED')
@@ -501,4 +505,142 @@ def export_quiz_results(request, quiz_id):
     return response
 
 
+def profile_settings_view(request):
+    # Lấy hoặc tạo profile nếu chưa có
+    profile, created = Profile.objects.get_or_create(user=request.user)
 
+    if request.method == 'POST':
+        # Cập nhật thông tin User (nếu cần)
+        request.user.email = request.POST.get('email')
+        request.user.save()
+
+        # Cập nhật Avatar nếu có file mới
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+            profile.save()
+
+        messages.success(request, "Cập nhật hồ sơ thành công!")
+        return redirect('profile_settings')
+
+    return render(request, 'app1/profile_settings.html', {'profile': profile})
+
+
+
+@login_required
+def profile_settings_view(request):
+    # Lấy chính xác bản ghi Profile của User, nếu chưa có thì tự động tạo mới
+    profile, created = Profile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip()
+
+        # Cập nhật họ tên vào Profile
+        profile.full_name = full_name
+
+        # Xử lý hình ảnh Avatar
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+
+        # Lưu lại bảng Profile trước
+        profile.save()
+
+        # Cập nhật Email vào bảng User nếu có thay đổi
+        if email:
+            request.user.email = email
+            request.user.save()
+
+        messages.success(request, "Cập nhật tài khoản thành công!")
+        return redirect('profile_settings')
+
+    # BẮT BUỘC: Truyền túi data 'profile' này ra ngoài để HTML hứng trực tiếp
+    return render(request, 'app1/profile_settings.html', {'profile': profile})
+
+
+@login_required
+def profile_settings_view(request):
+    from .models import Profile
+    profile, created = Profile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        # --- LOGIC ĐỔI MẬT KHẨU ---
+        if 'change_password' in request.POST:
+            old_password = request.POST.get('old_password')
+            new_password = request.POST.get('new_password')
+
+            # Kiểm tra mật khẩu cũ
+            if request.user.check_password(old_password):
+                request.user.set_password(new_password)
+                request.user.save()
+                update_session_auth_hash(request, request.user)  # Giữ user không bị văng ra ngoài
+                messages.success(request, "Đổi mật khẩu thành công!")
+            else:
+                messages.error(request, "Mật khẩu hiện tại không đúng!")
+            return redirect('profile_settings')
+
+        # --- LOGIC CẬP NHẬT THÔNG TIN CHUNG (Avatar, Tên, Email) ---
+        else:
+            full_name = request.POST.get('full_name', '').strip()
+            # Lấy email, nếu user xóa trắng thì nó sẽ là chuỗi rỗng ""
+            email = request.POST.get('email', '').strip()
+
+            profile.full_name = full_name
+
+            if 'avatar' in request.FILES:
+                profile.avatar = request.FILES['avatar']
+
+            profile.save()
+
+            # Gắn/Gỡ email thoải mái (kể cả để trống)
+            request.user.email = email
+            request.user.save()
+
+            messages.success(request, "Cập nhật thông tin thành công!")
+            return redirect('profile_settings')
+
+    return render(request, 'app1/profile_settings.html', {'profile': profile})
+
+
+@login_required
+def revoke_teacher_view(request):
+    user = request.user
+
+    if user.role == User.Role.TEACHER:
+        user.role = User.Role.STUDENT
+        user.save()
+        # Đồng bộ lại object từ database ngay lập tức
+        user.refresh_from_db()
+        messages.success(request, "Đã gỡ quyền Giáo viên. Bạn giờ là Học sinh!")
+    else:
+        messages.info(request, "Bạn hiện không phải là Giáo viên.")
+
+    return redirect('student_room')
+
+@login_required
+def switch_to_student_view(request):
+    """Hạ từ Giáo viên xuống Học sinh (tạm thời)"""
+    user = request.user
+    if user.role == User.Role.TEACHER:
+        user.role = User.Role.STUDENT
+        user.save()
+        user.refresh_from_db()
+        messages.success(request, "Đã chuyển sang giao diện Học sinh. Bạn có thể quay lại phòng Giáo viên bất cứ lúc nào.")
+    else:
+        messages.info(request, "Bạn hiện không phải là Giáo viên.")
+    return redirect('student_room')
+
+
+@login_required
+def switch_to_teacher_view(request):
+    """Nâng từ Học sinh lên lại Giáo viên (chỉ khi đủ điều kiện)"""
+    user = request.user
+    # Chỉ cho phép nếu user thực sự là giáo viên hợp lệ (được admin đánh dấu)
+    if user.is_teacher_eligible and user.role == User.Role.STUDENT:
+        user.role = User.Role.TEACHER
+        user.save()
+        user.refresh_from_db()
+        messages.success(request, "Đã trở lại phòng làm việc Giáo viên!")
+        return redirect('teacher_room')
+    else:
+        messages.warning(request, "Bạn không có quyền trở thành Giáo viên.")
+        return redirect('student_room')
