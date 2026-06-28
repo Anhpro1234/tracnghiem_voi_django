@@ -1,5 +1,8 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     # Trang chủ
@@ -28,4 +31,7 @@ urlpatterns = [
     path('route-after-login/', views.login_redirect_view, name='login_redirect'),
     path('class/<int:class_id>/export-students/', views.export_class_students, name='export_class_students'),
     path('quiz/<int:quiz_id>/export-results/', views.export_quiz_results, name='export_quiz_results'),
+    path('profile-settings/', views.profile_settings_view, name='profile_settings'),
+    path('revoke-teacher/', views.revoke_teacher_view, name='revoke_teacher_role'),
 ]
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

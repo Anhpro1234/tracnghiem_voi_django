@@ -1,0 +1,59 @@
+/* ==============================================================
+   DARK MODE OVERRIDES (Bản tút tát nâng cấp cho profile_settings.css)
+============================================================== */
+[data-bs-theme="dark"] .card {
+    background-color: #1a1d20 !important; /* Nền card tối mịn, có chiều sâu */
+    border: 1px solid #2b3035 !important;
+}
+
+[data-bs-theme="dark"] .sidebar-menu .list-group-item {
+    color: #dbead8;
+}
+
+[data-bs-theme="dark"] .sidebar-menu .list-group-item:hover {
+    background: rgba(255, 255, 255, 0.05); /* Sáng nhẹ trên nền tối */
+    color: #fff;
+}
+
+[data-bs-theme="dark"] .sidebar-menu .list-group-item.active {
+    background: var(--bs-primary);
+    color: white;
+}
+
+/* Input ở chế độ tối */
+[data-bs-theme="dark"] .form-control {
+    background-color: #212529;
+    border-color: #3b4248;
+    color: #f8f9fa;
+}
+
+[data-bs-theme="dark"] .form-control:focus {
+    background-color: #191c1f;
+    border-color: var(--bs-primary);
+    color: #fff;
+}
+
+/* Xử lý riêng cho ô Username bị disabled (Không bị mờ hay đổi màu lạc quẻ) */
+[data-bs-theme="dark"] .form-control:disabled {
+    background-color: #15171a;
+    color: #6c757d;
+    border-color: #2b3035;
+    opacity: 0.8;
+}
+
+/* Nút chức năng phụ */
+[data-bs-theme="dark"] .btn-outline-secondary {
+    border-color: #3b4248;
+    color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary:hover {
+    background-color: #3b4248;
+    color: white;
+}
+
+/* Đường gạch ngang phân cách trong sidebar */
+[data-bs-theme="dark"] .sidebar-menu hr {
+    border-color: #3b4248;
+    opacity: 0.4;
+}

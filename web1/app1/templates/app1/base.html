@@ -82,13 +82,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link active clickable" href="{% url 'home' %}">Trang chủ</a></li>
 
-        {% if user.is_authenticated %}
-            {% if user.is_teacher %}
-                <li class="nav-item"><a class="nav-link clickable fw-bold text-primary" href="{% url 'teacher_room' %}">🏫 Phòng Giáo viên</a></li>
-            {% elif user.is_student %}
-                <li class="nav-item"><a class="nav-link clickable fw-bold text-success" href="{% url 'student_room' %}">🎓 Phòng Học sinh</a></li>
-            {% endif %}
-        {% endif %}
+
       </ul>
 
       <div class="d-flex align-items-center gap-3">
@@ -136,21 +130,76 @@
           </div>
 
           {% if user.is_authenticated %}
-              <div class="dropdown">
-                  <button class="btn btn-outline-primary dropdown-toggle clickable fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      👋 Chào, {{ user.username }}
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-                      <li><a class="dropdown-item clickable" href="#">Tài khoản của tôi</a></li>
-                      <li><hr class="dropdown-divider"></li>
-                      <li>
-                          <a class="dropdown-item text-danger clickable fw-bold" href="{% url 'account_logout' %}">🚪 Đăng xuất</a>
-                      </li>
-                  </ul>
-              </div>
-          {% else %}
+            <div class="dropdown">
+                <button class="btn btn-light dropdown-toggle d-flex align-items-center border-0 shadow-sm"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        style="border-radius: 50px; padding: 5px 15px 5px 5px; background: var(--bs-tertiary-bg);">
+
+                    {% if user.profile.avatar and user.profile.avatar.name %}
+                        <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2 object-fit-cover" width="35" height="35" alt="Avatar">
+                    {% else %}
+                        <img src="{% static 'app1/images/default-avatar.png' %}" class="rounded-circle me-2 object-fit-cover" width="35" height="35" alt="Avatar">
+                    {% endif %}
+
+                    <div class="text-start me-2">
+                        <div class="fw-bold lh-1">{{ user.profile.full_name|default:user.username }}</div>
+                        <small class="text-muted lh-1">
+                            {% if user.is_superuser %}  Admin
+                            {% elif user.is_teacher %}  Giáo viên
+                            {% else %}  Học sinh
+                            {% endif %}
+                        </small>
+                    </div>
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" style="width: 260px; padding: 10px;">
+                    <li><a class="dropdown-item clickable" href="{% url 'profile_settings' %}"><ion-icon name="person-outline" class="me-2"></ion-icon> Tài khoản</a></li>
+                    <li><a class="dropdown-item clickable" href="#"><ion-icon name="diamond-outline" class="me-2"></ion-icon> VIP (Đang phát triển)</a></li>
+
+                    {% if user.is_teacher %}
+                        <li><hr class="dropdown-divider"></li>
+
+                    {% if request.resolver_match.url_name == 'teacher_room' %}
+                        <li>
+                            <a class="dropdown-item clickable text-primary fw-bold" href="{% url 'student_room' %}">
+                                <ion-icon name="school-outline" class="me-2"></ion-icon> Xem màn Học sinh
+                            </a>
+                        </li>
+                    {% else %}
+                    <li>
+                        <a class="dropdown-item clickable text-primary fw-bold" href="{% url 'teacher_room' %}">
+                            <ion-icon name="easel-outline" class="me-2"></ion-icon> Trở lại màn Giáo viên
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li>
+                        <a class="dropdown-item clickable text-danger" href="{% url 'revoke_teacher_role' %}" onclick="return confirm('Bạn chắc chắn muốn bỏ quyền Giáo viên?');">
+                            <ion-icon name="shield-outline" class="me-2"></ion-icon> Bỏ quyền giáo viên
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li><hr class="dropdown-divider"></li>
+
+                    <li><a class="dropdown-item clickable" href="javascript:location.reload()"><ion-icon name="refresh-outline" class="me-2"></ion-icon> Refresh</a></li>
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <li><a class="dropdown-item clickable" href="#"><ion-icon name="qr-code-outline" class="me-2"></ion-icon> QR đăng nhập</a></li>
+                    <li><a class="dropdown-item clickable" href="{% url 'forgot_password' %}"><ion-icon name="lock-closed-outline" class="me-2"></ion-icon> Tạo QR quên mật khẩu</a></li>
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <li>
+                        <a class="dropdown-item text-danger clickable fw-bold" href="{% url 'account_logout' %}">
+                            <ion-icon name="log-out-outline" class="me-2"></ion-icon> Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% else %}
               <div class="d-flex gap-2">
-                  <a href="{% url 'account_login' %}" class="btn btn-primary clickable">Đăng nhập</a>
+                  <a href="{% url 'account_login' %}" class="btn btn-outline-primary clickable">Đăng nhập</a>
                   <a href="{% url 'account_signup' %}" class="btn btn-outline-primary clickable">Đăng ký</a>
               </div>
           {% endif %}
@@ -236,44 +285,9 @@
                 }
             }, 1000);
         }
-
-    // 3. Rickroll chống F12 (Và chỉ chặn chuột phải im lặng)
-    (function () {
-        let triggered = false;
-        function activateRickroll() {
-            if (triggered) return;
-            triggered = true;
-            document.body.style.pointerEvents = 'none';
-            document.body.innerHTML = `
-            <div style="position:fixed; inset:0; background:radial-gradient(circle at top, rgba(255,255,255,0.95), rgba(245,247,250,0.98)); display:flex; align-items:center; justify-content:center; font-family:'Segoe UI',sans-serif; z-index:999999;">
-                <div style="width:min(500px,90%); background:rgba(255,255,255,0.75); backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.6); border-radius:24px; padding:40px; text-align:center; box-shadow: 0 20px 60px rgba(0,0,0,.08);">
-                    <div style="font-size:64px; margin-bottom:20px;">🤔😒</div>
-                    <h2 style="margin:0; color:#1f2937; font-size:28px;">Có vẻ bạn rất tò mò</h2>
-                    <p style="margin-top:15px; color:#6b7280; line-height:1.6;">Bạn tính làm gì Web tuôi? tính F12 à?<br>Chúng tôi đánh giá cao tinh thần khám phá đó.</p>
-                    <p style="margin-top:25px; color:#2563eb; font-weight:600;">Rất nhanh thôi :)...</p>
-                </div>
-            </div>`;
-            setTimeout(() => { window.location.replace('https://youtu.be/eioYulMp_5k?si=AC4hO8zQTmqJ2cjj'); }, 2500);
-        }
-        // CHỈ CHẶN CHUỘT PHẢI (Không ăn Troll)
-        document.addEventListener('contextmenu', e => {
-            e.preventDefault();
-        });
-        // ĂN TROLL NẾU BẤM F12
-        document.addEventListener('keydown', e => {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))) {
-                e.preventDefault();
-                activateRickroll();
-            }
-        });
-        // ĂN TROLL NẾU MỞ DEVTOOLS TỪ MENU TRÌNH DUYỆT
-        setInterval(() => {
-            const widthDiff = window.outerWidth - window.innerWidth;
-            const heightDiff = window.outerHeight - window.innerHeight;
-            if (widthDiff > 160 || heightDiff > 160) { activateRickroll(); }
-        }, 500);
-    })();
 </script>
+
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flipdown@0.3.2/dist/flipdown.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flipdown@0.3.2/dist/flipdown.min.js"></script>
 <script>    window.EXAM_END_TIME = "{{ exam_end_time|default:'' }}"; </script>

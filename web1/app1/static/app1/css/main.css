@@ -601,3 +601,28 @@
     background-color: var(--bs-border-color);
     border-radius: 10px;
 }
+/* Tùy chỉnh Dropdown menu */
+.dropdown-menu {
+    border-radius: 12px; /* Bo góc cho mượt */
+    font-size: 0.95rem;
+}
+
+.dropdown-item {
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.dropdown-item ion-icon {
+    font-size: 1.1rem;
+    color: var(--bs-secondary-color);
+}
+
+.dropdown-item.text-danger ion-icon {
+    color: var(--bs-danger);
+} 

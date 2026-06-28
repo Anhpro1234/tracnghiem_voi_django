@@ -34,12 +34,11 @@
 .login-register a:hover { text-decoration: underline; color: var(--bs-primary); }
 .input-box .icon.clickable-icon { pointer-events: auto; cursor: pointer; }
 
-/* ======================================================== */
-/* ===== HỆ THỐNG TRƯỢT 3 MÀN HÌNH & TỰ ĐỘNG CĂN CHIỀU CAO === */
-/* ======================================================== */
+/* ======================================================= */
+/* == HỆ THỐNG TRƯỢT 3 MÀN HÌNH & TỰ ĐỘNG CĂN CHIỀU CAO == */
+/* ======================================================= */
 .glass-wrapper {
     width: 480px;
-    /* XÓA ĐI DÒNG height: 550px Ở ĐÂY ĐỂ TRÁNH TRANH CHẤP VỚI JAVASCRIPT */
     overflow: hidden;
     position: relative;
     transition: height 0.4s ease-in-out; /* Bắt buộc có dòng này để co dãn chiều cao mượt mà */
@@ -77,7 +76,13 @@
 }
 </style>
 
-<div class="glass-universe" style="background-image: url('{% static 'app1/images/background.jpg' %}?v=2'); min-height: 100vh;">
+<div class="glass-universe" style="background-image: url('{% static 'app1/images/background.jpg' %}?v=2'); min-height: 100vh; position: relative;">
+
+    <div style="position: absolute; top: 20px; right: 20px; z-index: 100;">
+        <button id="btn-lang-toggle" class="btn btn-sm text-white fw-bold rounded-pill clickable" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); backdrop-filter: blur(10px); padding: 5px 15px;">
+            🇻🇳 VIE
+        </button>
+    </div>
 
     {% if form.errors %}
     <div id="error-toast" class="glass-toast">
@@ -99,71 +104,71 @@
     <div class="glass-wrapper {% if 'signup' in request.path %}active-register{% elif 'password/reset' in request.path %}active-forgot{% endif %}">
 
         <div class="form-box forgot">
-            <h2>Reset Password</h2>
-            <p class="forgot-text">Enter your email address and we will send you a link to reset your password.</p>
+            <h2 class="lang-text" data-key="title_reset">Reset Password</h2>
+            <p class="forgot-text lang-text" data-key="desc_reset">Enter your email address and we will send you a link to reset your password.</p>
             <form method="POST" action="{% url 'account_reset_password' %}">
                 {% csrf_token %}
                 <div class="input-box">
                     <span class="icon"><ion-icon name="mail"></ion-icon></span>
                     <input type="email" name="email" required id="id_email_reset" placeholder=" ">
-                    <label>Email Address</label>
+                    <label class="lang-text" data-key="ph_email_address">Email Address</label>
                 </div>
-                <button type="submit" class="btn-glass clickable" style="margin-top: 15px;">Send Reset Link</button>
+                <button type="submit" class="btn-glass clickable lang-text" data-key="btn_send_reset" style="margin-top: 15px;">Send Reset Link</button>
                 <div class="login-register">
-                    <p>Remembered your password? <a class="login-link">Back to Login</a></p>
+                    <p><span class="lang-text" data-key="remembered_pwd">Remembered your password?</span> <a class="login-link clickable lang-text" data-key="btn_back_login">Back to Login</a></p>
                 </div>
             </form>
         </div>
 
         <div class="form-box login">
-            <h2>Login</h2>
+            <h2 class="lang-text" data-key="title_login">Login</h2>
             <form method="POST" action="{% url 'account_login' %}">
                 {% csrf_token %}
                 <div class="input-box">
                     <span class="icon"><ion-icon name="mail"></ion-icon></span>
                     <input type="text" name="login" required id="id_login" placeholder=" ">
-                    <label>Username or Email</label>
+                    <label class="lang-text" data-key="ph_username">Username or Email</label>
                 </div>
                 <div class="input-box">
                     <span class="icon clickable-icon" onclick="togglePassword()">
                         <ion-icon name="eye-off-outline" id="toggle-eye"></ion-icon>
                     </span>
                     <input type="password" name="password" required id="id_password" placeholder=" ">
-                    <label>Password</label>
+                    <label class="lang-text" data-key="ph_password">Password</label>
                 </div>
                 <div class="remember-forgot">
-                    <label class="clickable"><input type="checkbox" name="remember" id="id_remember"> Remember me</label>
-                    <a class="forgot-link">Forgot Password?</a>
+                    <label class="clickable"><input type="checkbox" name="remember" id="id_remember"> <span class="lang-text" data-key="remember_me">Remember me</span></label>
+                    <a class="forgot-link clickable lang-text" data-key="forgot_pwd">Forgot Password?</a>
                 </div>
-                <button type="submit" class="btn-glass clickable">Login</button>
+                <button type="submit" class="btn-glass clickable lang-text" data-key="btn_login">Login</button>
                 <div class="login-register">
-                    <p>Don't have an account? <a class="register-link">Register</a></p>
+                    <p><span class="lang-text" data-key="no_account">Don't have an account?</span> <a class="register-link clickable lang-text" data-key="btn_register_link">Register</a></p>
                 </div>
             </form>
         </div>
 
         <div class="form-box register">
-            <h2>Sign Up</h2>
+            <h2 class="lang-text" data-key="title_register">Register</h2>
             <form method="POST" action="{% url 'account_signup' %}">
                 {% csrf_token %}
                 <div class="input-box">
                     <span class="icon"><ion-icon name="mail"></ion-icon></span>
                     <input type="email" name="email" value="{{ form.email.value|default_if_none:'' }}" required id="id_email_reg" placeholder=" ">
-                    <label>Email</label>
+                    <label class="lang-text" data-key="ph_email_only">Email</label>
                 </div>
                 <div class="input-box">
                     <span class="icon"><ion-icon name="person"></ion-icon></span>
                     <input type="text" name="username" value="{{ form.username.value|default_if_none:'' }}" required id="id_username_reg" placeholder=" ">
-                    <label>Username</label>
+                    <label class="lang-text" data-key="ph_user_only">Username</label>
                 </div>
                 <div class="input-box">
                     <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
                     <input type="password" name="password1" required id="id_password1_reg" placeholder=" ">
-                    <label>Password</label>
+                    <label class="lang-text" data-key="ph_password">Password</label>
                 </div>
-                <button type="submit" class="btn-glass clickable" style="margin-top: 15px;">Sign Up</button>
+                <button type="submit" class="btn-glass clickable lang-text" data-key="btn_register" style="margin-top: 15px;">Register</button>
                 <div class="login-register">
-                    <p>Already have an account? <a class="login-link">Login</a></p>
+                    <p><span class="lang-text" data-key="has_account">Already have an account?</span> <a class="login-link clickable lang-text" data-key="btn_login_link">Login</a></p>
                 </div>
             </form>
         </div>
@@ -171,9 +176,54 @@
     </div>
 
     <footer class="dashboard-footer">
-        <p>Art by <a href="https://https://x.com/ZZZ_EN" class="clickable" target="_blank">@ZZZ_EN</a></p>
+        <p>Art by <a href="https://x.com/ZZZ_EN" class="clickable" target="_blank">@ZZZ_EN</a></p>
     </footer>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const dict = {
+        "en": {
+            "title_login": "Login", "ph_username": "Username or Email", "ph_password": "Password", "remember_me": "Remember me", "forgot_pwd": "Forgot Password?", "btn_login": "Login", "no_account": "Don't have an account?", "btn_register_link": "Register",
+            "title_register": "Register", "ph_email_only": "Email", "ph_user_only": "Username", "btn_register": "Register", "has_account": "Already have an account?", "btn_login_link": "Login",
+            "title_reset": "Reset Password", "desc_reset": "Enter your email address and we will send you a link to reset your password.", "ph_email_address": "Email Address", "btn_send_reset": "Send Reset Link", "remembered_pwd": "Remembered your password?", "btn_back_login": "Back to Login",
+            "toggle_btn": "VIE"
+        },
+        "vi": {
+            "title_login": "Đăng nhập", "ph_username": "Tên đăng nhập hoặc Email", "ph_password": "Mật khẩu", "remember_me": "Ghi nhớ", "forgot_pwd": "Quên mật khẩu?", "btn_login": "Đăng nhập", "no_account": "Chưa có tài khoản?", "btn_register_link": "Đăng ký ngay",
+            "title_register": "Đăng ký", "ph_email_only": "Email", "ph_user_only": "Tên người dùng", "btn_register": "Đăng ký", "has_account": "Đã có tài khoản?", "btn_login_link": "Đăng nhập",
+            "title_reset": "Khôi phục mật khẩu", "desc_reset": "Nhập email của bạn và chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.", "ph_email_address": "Địa chỉ Email", "btn_send_reset": "Gửi liên kết", "remembered_pwd": "Đã nhớ mật khẩu?", "btn_back_login": "Quay lại Đăng nhập",
+            "toggle_btn": "ENG"
+        }
+    };
+
+    const langBtn = document.getElementById('btn-lang-toggle');
+    let currentLang = localStorage.getItem('app_lang') || 'vi'; // Mặc định mở lên là tiếng Việt
+
+    function applyLanguage(lang) {
+        document.querySelectorAll('.lang-text').forEach(el => {
+            const key = el.getAttribute('data-key');
+            if (dict[lang][key]) {
+                el.textContent = dict[lang][key];
+            }
+        });
+        if(langBtn) langBtn.textContent = dict[lang]['toggle_btn'];
+    }
+
+    // Chạy khi load trang
+    applyLanguage(currentLang);
+
+    // Lắng nghe sự kiện bấm nút
+    if (langBtn) {
+        langBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentLang = currentLang === 'vi' ? 'en' : 'vi';
+            localStorage.setItem('app_lang', currentLang);
+            applyLanguage(currentLang);
+        });
+    }
+});
+</script>
 
 <script>
     // 1. JS XỬ LÝ POPUP LỖI (TOAST)

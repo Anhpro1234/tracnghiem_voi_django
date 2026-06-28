@@ -1,0 +1,85 @@
+
+/* Bảng */
+.custom-ux-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.custom-ux-table th {
+    padding: 12px 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+/* Cụm nút Thao tác */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+}
+
+.action-buttons .btn {
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+/* ==============================================================
+   2. LIGHT MODE (Mặc định)
+============================================================== */
+[data-bs-theme="light"] .table-light-ux {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+[data-bs-theme="light"] .action-safe {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+    border: 1px solid #0d6efd;
+}
+[data-bs-theme="light"] .action-safe:hover { background-color: #0d6efd; color: #fff; }
+
+[data-bs-theme="light"] .action-secondary {
+    background-color: transparent;
+    color: #198754;
+    border: 1px solid #198754;
+}
+[data-bs-theme="light"] .action-secondary:hover { background-color: #198754; color: white; }
+
+[data-bs-theme="light"] .action-danger {
+    background-color: transparent;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+[data-bs-theme="light"] .action-danger:hover { background-color: #dc3545; color: white; }
+
+/* ==============================================================
+   3. DARK MODE (Góc nhìn tối)
+============================================================== */
+[data-bs-theme="dark"] .table-light-ux {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .action-safe {
+    background-color: rgba(13, 110, 253, 0.15);
+    color: #6ea8fe;
+    border: 1px solid rgba(13, 110, 253, 0.3);
+}
+[data-bs-theme="dark"] .action-safe:hover { background-color: #0d6efd; color: #fff; }
+
+[data-bs-theme="dark"] .action-secondary {
+    background-color: transparent;
+    color: #75b798;
+    border-color: #75b798;
+}
+[data-bs-theme="dark"] .action-secondary:hover { background-color: #75b798; color: #212529; }
+
+[data-bs-theme="dark"] .action-danger {
+    background-color: transparent;
+    color: #ea868f;
+    border-color: #ea868f;
+}
+[data-bs-theme="dark"] .action-danger:hover { background-color: #ea868f; color: #212529; box-shadow: 0 0 8px rgba(234, 134, 143, 0.4); }
