@@ -4,7 +4,7 @@
 
 <div class="container mt-4">
     <div class="mb-4 fs-4 fw-bold" style="color: var(--bs-heading-color);">
-        Chào mừng trở lại, <span class="text-primary">{{ user.username }}👋 </span>
+        Chào mừng trở lại, <span class="text-primary">{{ user.profile.full_name|default:user.username }}👋 </span>
     </div>
 
     {% if messages %}
