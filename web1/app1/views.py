@@ -18,9 +18,11 @@ from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from .models import Profile
 from django.contrib.auth import update_session_auth_hash
+
 # Định nghĩa User ngay sau import
 User = get_user_model()
 # --- TIỆN ÍCH ---
+
 def is_teacher(user): return user.is_authenticated and user.is_teacher()
 
 
