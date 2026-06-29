@@ -91,7 +91,7 @@
         <div id="flipdown"></div>
         </div>
         <div class="timer-progress" id="exam-timer-container" style="display: none;">
-            <span id="exam-timer-text" class="timer-text">⏳ --:--</span>
+            <span id="exam-timer-text" class="timer-text">--:--</span>
             <div class="progress" style="height: 5px; width: 80px; margin-left: 8px;">
                 <div id="exam-timer-bar" class="progress-bar bg-warning" style="width: 100%;"></div>
             </div>
@@ -281,7 +281,7 @@
                 } else {
                     const m = Math.floor((dist % 3600000) / 60000);
                     const s = Math.floor((dist % 60000) / 1000);
-                    timerText.textContent = `⏳ ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                    timerText.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
                 }
             }, 1000);
         }

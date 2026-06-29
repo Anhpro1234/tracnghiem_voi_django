@@ -112,7 +112,8 @@ class StudentExamSession(models.Model):
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField()
     is_completed = models.BooleanField(default=False)
-
+    shuffled_question_ids = models.JSONField(null=True, blank=True)
+    shuffled_choice_ids = models.JSONField(null=True, blank=True)
     class Meta:
         unique_together = ('user', 'quiz')
 
