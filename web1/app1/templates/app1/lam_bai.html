@@ -34,13 +34,15 @@
             {% csrf_token %}
             {% for q in questions %}
             <div class="question-card" id="q-{{ forloop.counter }}">
-                <h4 style="color: #333; margin-bottom: 25px; line-height: 1.5;">
-                    <span style="color: #0d6efd;">Câu {{ forloop.counter }}/{{ questions|length }}:</span> {{ q.content }}
-                </h4>
+                <h5 style="color: #0d6efd; font-weight: bold; margin-bottom: 15px;">
+                        Câu {{ forloop.counter }}/{{ questions|length }}: </h5>
+                <div style="color: #333; margin-bottom: 25px; line-height: 1.6; font-size: 1.15em;">
+                         {{ q.content|safe }}
+                </div>
                 <div class="choices-container">
                     {% for choice in q.shuffled_choices %}
                     <div>
-                        <input type="radio" name="question_{{ q.id }}" id="choice_{{ choice.id }}" value="{{ choice.id }}" onchange="handleChoice({{ forloop.parentloop.counter }})">
+                        <input type="radio" name="question_{{ q.id }}" id="choice_{{ choice.id }}" value="{{ choice.id }}">
                         <label class="choice-label" for="choice_{{ choice.id }}">{{ choice.content }}</label>
                     </div>
                     {% endfor %}
@@ -60,7 +62,6 @@
 
     <div class="col-md-4">
         <div class="quiz-container sticky-top" style="top: 20px;">
-            <!-- Đồng hồ cũ -->
             <div id="timer-container">
                 <h5 class="text-center text-muted mb-2">⏱ Thời gian còn lại</h5>
                 <h1 class="text-center text-danger font-weight-bold" id="timer">--:--</h1>
@@ -114,23 +115,20 @@
             answeredCount++;
             updateProgress();
         }
-        // Tự động chuyển sang câu tiếp theo sau 0.4s (giữ hiệu ứng)
         setTimeout(() => {
             if (num < totalQ) nextQuestion(num);
         }, 400);
     }
 
-    // Cập nhật thanh tiến độ
     function updateProgress() {
         document.getElementById('progress-text').innerText = `${answeredCount}/${totalQ}`;
         const percent = (answeredCount / totalQ) * 100;
         document.getElementById('progress-bar').style.width = `${percent}%`;
     }
 
-    // Gán sự kiện onchange cho tất cả radio (chỉ để gọi markAnswered, không lưu)
+    // Gán sự kiện cho Radio
     document.querySelectorAll('input[type=radio]').forEach(radio => {
         radio.addEventListener('change', function() {
-            // Lấy số thứ tự câu từ id của card cha
             const card = this.closest('.question-card');
             if (card) {
                 const num = parseInt(card.id.split('-')[1]);
@@ -139,34 +137,49 @@
         });
     });
 
-    // === ĐỒNG HỒ ĐẾM NGƯỢC (CŨ) ===
+    // === ĐỒNG HỒ ĐẾM NGƯỢC (CHỐNG HACK F5 MỚI NHẤT) ===
     const timerElement = document.getElementById('timer');
-    let timeLeft = {{ quiz.duration_minutes|default:0 }} * 60;
+    const endTimeStr = "{{ exam_end_time }}";
+
+    let timeLeft = 0;
+    if (endTimeStr) {
+        const endTime = new Date(endTimeStr).getTime();
+        const now = new Date().getTime();
+        timeLeft = Math.floor((endTime - now) / 1000);
+    } else {
+        timeLeft = {{ total_minutes|default:0 }} * 60;
+    }
+
     if (timeLeft > 0 && timerElement) {
         const timerInterval = setInterval(() => {
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                alert("Đã hết thời gian làm bài! Hệ thống sẽ tự động thu bài.");
+                alert("Đã hết thời gian làm bài! Hệ thống sẽ tự động nộp bài.");
+
+                window.onbeforeunload = null;
                 document.getElementById('quizForm').submit();
             } else {
-                const m = Math.floor(timeLeft / 60);
-                const s = timeLeft % 60;
-                timerElement.innerText = `${m}:${s < 10 ? '0' + s : s}`;
+                const h = Math.floor(timeLeft / 3600);
+                const m = Math.floor((timeLeft % 3600) / 60);
+                const s = Math.floor(timeLeft % 60);
+
+                if (h > 0) {
+                    timerElement.innerText = `${h}:${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+                } else {
+                    timerElement.innerText = `${m}:${s < 10 ? '0' + s : s}`;
+                }
                 timeLeft--;
             }
         }, 1000);
-    } else {
-        // Ẩn đồng hồ nếu không có thời gian
-        if (timerElement) timerElement.parentElement.style.display = 'none';
+    } else if (timerElement) {
+        timerElement.parentElement.style.display = 'none';
     }
 
     // === CẢNH BÁO KHI F5 / RỜI TRANG ===
     window.addEventListener('beforeunload', function (e) {
-        // Chỉ cảnh báo nếu người dùng đã chọn ít nhất một đáp án
         if (answeredCount > 0) {
             e.preventDefault();
-            e.returnValue = 'Bạn có chắc muốn rời đi? Tất cả đáp án đã chọn sẽ bị mất!';
-            return e.returnValue;
+            e.returnValue = '';
         }
     });
 </script>

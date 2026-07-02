@@ -1,27 +1,29 @@
-import re, random, string
-from docx import Document
+import os, csv, re, random, string, json
+from datetime import timedelta
+from .models import QuizQuestion
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import PermissionDenied
-from django.contrib.auth import logout
-from django.db import transaction
+from django.contrib.auth import logout, update_session_auth_hash, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.contrib.auth import get_user_model
-from .models import Quiz, Question, Choice, Subject, StudentAnswer, Classroom, ClassEnrollment
-import csv
-from django.http import HttpResponse
+from django.db import transaction
 from django.db.models import Count, Q
-import random, json
+from django.http import HttpResponse
 from django.utils import timezone
-from .models import StudentExamSession
-from datetime import datetime, timedelta
-from django.shortcuts import render, redirect
-from .models import Profile
-from django.contrib.auth import update_session_auth_hash
+from docx import Document
+from docx.table import Table
+from docx.text.paragraph import Paragraph
+from .models import (
+    Quiz, Question, Choice, Subject, StudentAnswer,
+    Classroom, ClassEnrollment, StudentExamSession, Profile
+)
 
-# Định nghĩa User ngay sau import
 User = get_user_model()
-# --- TIỆN ÍCH ---
+
+
+# ==========================================
+# --- TIỆN ÍCH & CƠ BẢN ---
+# ==========================================
 
 def is_teacher(user): return user.is_authenticated and user.is_teacher()
 
@@ -39,43 +41,108 @@ def logout_view(request):
     return redirect('login')
 
 
-# --- PHÒNG CHỨC NĂNG ---
+# ==========================================
+# --- TÀI KHOẢN & HỒ SƠ ---
+# ==========================================
+
+def signup_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        password_confirm = request.POST.get('password_confirm')
+        role = request.POST.get('role')
+
+        if password != password_confirm:
+            messages.error(request, "Mật khẩu xác nhận không khớp!")
+            return redirect('signup')
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Tên đăng nhập đã tồn tại!")
+            return redirect('signup')
+
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.role = User.Role.TEACHER if role == 'teacher' else User.Role.STUDENT
+        user.save()
+        messages.success(request, "Đăng ký thành công!")
+        return redirect('login')
+    return render(request, 'account/signup.html')
+
+
+@login_required(login_url='/accounts/login/')
+def profile_settings_view(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        # Logic đổi mật khẩu
+        if 'old_password' in request.POST:
+            if request.user.check_password(request.POST.get('old_password')):
+                request.user.set_password(request.POST.get('new_password'))
+                request.user.save()
+                update_session_auth_hash(request, request.user)
+                messages.success(request, "Đổi mật khẩu thành công!")
+            else:
+                messages.error(request, "Mật khẩu cũ sai!")
+        # Logic cập nhật thông tin
+        else:
+            profile.full_name = request.POST.get('full_name', '').strip()
+            request.user.email = request.POST.get('email', '').strip()
+
+            # Xử lý ngày sinh an toàn
+            dob = request.POST.get('dob')
+            profile.dob = dob if dob else None
+
+            if 'avatar' in request.FILES: profile.avatar = request.FILES['avatar']
+
+            profile.save()
+            request.user.save()
+            messages.success(request, "Cập nhật thành công!")
+        return redirect('profile_settings')
+    return render(request, 'app1/profile_settings.html', {'profile': profile})
+
+
+@login_required
+def login_redirect_view(request):
+    if is_teacher(request.user): return redirect('teacher_room')
+    if is_student(request.user): return redirect('student_room')
+    return redirect('home')
+
+
+# ==========================================
+# --- PHÒNG CHỨC NĂNG & VIEWPOINT ---
+# ==========================================
+
 @login_required(login_url='/accounts/login/')
 def teacher_room(request):
-    if not is_teacher(request.user): raise PermissionDenied("Bạn không có quyền vào phòng Giáo viên!")
-
-    # Lấy các lớp của GV
+    if not is_teacher(request.user): raise PermissionDenied()
     my_classes = Classroom.objects.filter(teacher=request.user).order_by('-created_at')
-
-    # Lấy danh sách Học sinh đang "Chờ duyệt"
-    pending_requests = ClassEnrollment.objects.filter(
-        classroom__in=my_classes,
-        status='PENDING'
-    ).order_by('-created_at')
-
-    return render(request, 'app1/teacher_room.html', {
-        'my_quizzes': Quiz.objects.filter(creator=request.user).order_by('-created_at'),
-        'my_classes': my_classes,
-        'pending_requests': pending_requests,
-    })
+    pending_requests = ClassEnrollment.objects.filter(classroom__in=my_classes, status='PENDING').order_by(
+        '-created_at')
+    return render(request, 'app1/teacher_room.html',
+                  {'my_quizzes': Quiz.objects.filter(creator=request.user), 'my_classes': my_classes,
+                   'pending_requests': pending_requests})
 
 
 @login_required(login_url='/accounts/login/')
 def student_room(request):
-    if not (is_student(request.user) or is_teacher(request.user)):
+    # Kiểm tra quyền: Cho phép học sinh thật HOẶC giáo viên đang dùng góc nhìn học sinh
+    is_teacher_viewing = is_teacher(request.user) and request.session.get('is_viewing_as_student')
+    if not (is_student(request.user) or is_teacher_viewing):
         raise PermissionDenied("Bạn không có quyền vào phòng Học sinh!")
+
     user = request.user
 
-    joined_classes = ClassEnrollment.objects.filter(student=user, status='APPROVED')
-    pending_classes = ClassEnrollment.objects.filter(student=user, status='PENDING')
-
+    # XỬ LÝ KHI NGƯỜI DÙNG BẤM NÚT
     if request.method == 'POST':
+
+        # 1. Bấm nút "Vào thi"
         if 'btn_vao_thi' in request.POST:
             room_id = request.POST.get('room_id', '').strip()
             if Quiz.objects.filter(room_id=room_id, is_active=True).exists():
-                return redirect('take_quiz', room_id=room_id)
+                # Chuyển hướng sang Phòng xác nhận (Phòng chờ)
+                return redirect('enter_quiz_room', room_id=room_id)
             messages.error(request, "Mã phòng thi không tồn tại hoặc đề thi đang đóng!")
 
+        # 2. Bấm nút "Tham gia lớp học"
         elif 'btn_tham_gia_lop' in request.POST:
             class_code = request.POST.get('class_code', '').strip()
             try:
@@ -87,13 +154,26 @@ def student_room(request):
                     messages.success(request, f"Đã gửi yêu cầu vào lớp {classroom.name}. Chờ giáo viên duyệt nhé!")
             except Classroom.DoesNotExist:
                 messages.error(request, "Mã lớp không tồn tại! Kiểm tra lại xem.")
+
         return redirect('student_room')
+
+    # DỮ LIỆU HIỂN THỊ LÊN TRANG
+    joined_classes = ClassEnrollment.objects.filter(student=user, status='APPROVED')
+    pending_classes = ClassEnrollment.objects.filter(student=user, status='PENDING')
 
     return render(request, 'app1/student_room.html', {
         'joined_classes': joined_classes,
         'pending_classes': pending_classes,
     })
 
+
+@login_required
+def revoke_teacher_view(request):
+    if is_teacher(request.user):
+        request.user.role = User.Role.STUDENT
+        request.user.save()
+        messages.success(request, "Đã trở thành Học sinh.")
+    return redirect('student_room')
 
 # --- QUẢN LÝ LỚP HỌC ---
 @login_required(login_url='/accounts/login/')
@@ -132,41 +212,100 @@ def handle_enrollment(request, enrollment_id, action):
 @login_required(login_url='/accounts/login/')
 def upload_create_quiz(request):
     if not is_teacher(request.user): raise PermissionDenied()
+
     if request.method == 'POST' and request.FILES.get('word_file'):
         file = request.FILES['word_file']
         subject = Subject.objects.get(id=request.POST.get('subject_id'))
         doc = Document(file)
-        quiz = Quiz.objects.create(title=f"Đề: {file.name}", creator=request.user, subject=subject,
-                                   room_id=''.join(random.choices(string.digits, k=6)), is_active=False)
+
+        quiz = Quiz.objects.create(
+            title=f"Đề: {file.name}", creator=request.user, subject=subject,
+            room_id=''.join(random.choices(string.digits, k=6)), is_active=False
+        )
 
         current_q, current_choices = None, []
+        current_table_html = ""
+        order_counter = 1
 
-        def flush_question(q_content, choices_list):
+        # --- CÔNG TẮC NGẮT (Flag) ---
+        in_answer_section = False
+        junk_keywords = ["Nguồn", "Đơn vị", "Niên giám", "Thống kê"]
+
+        def flush_question(q_content, choices_list, table_html):
+            nonlocal order_counter
             if q_content and choices_list:
-                q = Question.objects.create(quiz=quiz, content=q_content.strip())
-                for c in choices_list: Choice.objects.create(question=q, content=c['text'], is_correct=c['is_correct'])
+                q = Question.objects.create(
+                    subject=subject,
+                    content=q_content.strip() + (f"<br>{table_html}" if table_html else ""),
+                    creator=request.user
+                )
+                for c in choices_list:
+                    Choice.objects.create(question=q, content=c['text'], is_correct=c['is_correct'])
 
-        for para in doc.paragraphs:
-            text = para.text.strip()
-            if not text: continue
-            if re.match(r'^(Câu|Cau)\s*\d+[:\.\s]+', text, re.IGNORECASE):
-                flush_question(current_q, current_choices)
-                current_q = re.sub(r'^(Câu|Cau)\s*\d+[:\.\s]+', '', text, flags=re.IGNORECASE)
-                current_choices = []
-            elif re.search(r'[A-D][\.\)\s]+', text, re.IGNORECASE):
-                parts = re.split(r'(?=[A-D][\.\)\s]+)', text)
-                for part in parts:
-                    part = part.strip()
-                    if not part: continue
-                    is_correct = '*' in part
-                    clean_text = re.sub(r'^\*?[A-D][\.\)\s]+', '', part).strip()
-                    current_choices.append({'text': clean_text, 'is_correct': is_correct})
-            elif current_q:
-                current_q += " " + text
-        flush_question(current_q, current_choices)
+                QuizQuestion.objects.create(quiz=quiz, question=q, order=order_counter)
+                order_counter += 1
+
+        # Duyệt XML Body
+        for child in doc.element.body:
+            # 1. Xử lý đoạn văn
+            if child.tag.endswith('p'):
+                p = Paragraph(child, doc)
+                text = p.text.strip()
+                if not text: continue
+
+                # --- KIỂM TRA ĐIỂM NGẮT (ĐÁP ÁN) ---
+                # Nếu thấy chữ "ĐÁP ÁN" -> bật công tắc ngắt
+                if "ĐÁP ÁN" in text.upper() or "HƯỚNG DẪN GIẢI" in text.upper():
+                    in_answer_section = True
+
+                # Nếu công tắc đang bật -> BỎ QUA dòng này
+                if in_answer_section:
+                    continue
+
+                    # Bỏ qua các đoạn văn bản rác khác
+                if any(keyword.lower() in text.lower() for keyword in junk_keywords):
+                    continue
+
+                if re.match(r'^(Câu|Cau)\s*\d+[:\.\s]+', text, re.IGNORECASE):
+                    flush_question(current_q, current_choices, current_table_html)
+                    current_q = re.sub(r'^(Câu|Cau)\s*\d+[:\.\s]+', '', text, flags=re.IGNORECASE)
+                    current_choices = []
+                    current_table_html = ""
+
+                elif re.search(r'^[A-D][\.\)\s]+', text, re.IGNORECASE):
+                    parts = re.split(r'(?=[A-D][\.\)\s]+)', text)
+                    for part in parts:
+                        part = part.strip()
+                        if not part: continue
+                        clean_text = re.sub(r'^\*?[A-D][\.\)\s]+', '', part).strip()
+                        # Lọc rác nhỏ
+                        if any(keyword.lower() in clean_text.lower() for keyword in junk_keywords):
+                            continue
+                        is_correct = '*' in part
+                        current_choices.append({'text': clean_text, 'is_correct': is_correct})
+
+                elif current_q and not current_choices:
+                    current_q += " " + text
+
+            # 2. Xử lý Bảng
+            elif child.tag.endswith('tbl'):
+                # Nếu đang ở khu vực đáp án thì bỏ qua bảng luôn
+                if in_answer_section: continue
+
+                table = Table(child, doc)
+                html_table = "<table class='table table-bordered'>"
+                for row in table.rows:
+                    html_table += "<tr>"
+                    for cell in row.cells:
+                        html_table += f"<td>{cell.text}</td>"
+                    html_table += "</tr>"
+                html_table += "</table>"
+                current_table_html = html_table
+
+        flush_question(current_q, current_choices, current_table_html)
         return redirect('edit_quiz', quiz_id=quiz.id)
-    return render(request, 'app1/upload_quiz.html', {'subjects': Subject.objects.all()})
 
+    return render(request, 'app1/upload_quiz.html', {'subjects': Subject.objects.all()})
 
 @login_required(login_url='/accounts/login/')
 def edit_quiz(request, quiz_id):
@@ -242,7 +381,11 @@ def delete_quiz(request, quiz_id):
 def take_quiz(request, room_id):
     quiz = get_object_or_404(Quiz, room_id=room_id, is_active=True)
     questions = quiz.questions.prefetch_related('choices').all()
-
+    if 'btn_vao_thi' in request.POST:
+        room_id = request.POST.get('room_id', '').strip()
+        if Quiz.objects.filter(room_id=room_id, is_active=True).exists():
+            return redirect('enter_quiz_room', room_id=room_id)  # Sửa ở đây
+        messages.error(request, "Mã phòng thi không tồn tại!")
     # 1. Xác định chế độ thời gian
     if quiz.duration_minutes and quiz.duration_minutes > 0:
         # Có giới hạn -> dùng StudentExamSession
@@ -386,10 +529,6 @@ def signup_view(request):
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
-
-
-User = get_user_model()
-
 
 def signup_view(request):
     if request.method == 'POST':
@@ -618,31 +757,13 @@ def revoke_teacher_view(request):
 
     return redirect('student_room')
 
-@login_required
-def switch_to_student_view(request):
-    """Hạ từ Giáo viên xuống Học sinh (tạm thời)"""
-    user = request.user
-    if user.role == User.Role.TEACHER:
-        user.role = User.Role.STUDENT
-        user.save()
-        user.refresh_from_db()
-        messages.success(request, "Đã chuyển sang giao diện Học sinh. Bạn có thể quay lại phòng Giáo viên bất cứ lúc nào.")
-    else:
-        messages.info(request, "Bạn hiện không phải là Giáo viên.")
-    return redirect('student_room')
 
+@login_required(login_url='/accounts/login/')
+def enter_quiz_room(request, room_id):
+    # Lấy thông tin đề thi
+    quiz = get_object_or_404(Quiz, room_id=room_id, is_active=True)
 
-@login_required
-def switch_to_teacher_view(request):
-    """Nâng từ Học sinh lên lại Giáo viên (chỉ khi đủ điều kiện)"""
-    user = request.user
-    # Chỉ cho phép nếu user thực sự là giáo viên hợp lệ (được admin đánh dấu)
-    if user.is_teacher_eligible and user.role == User.Role.STUDENT:
-        user.role = User.Role.TEACHER
-        user.save()
-        user.refresh_from_db()
-        messages.success(request, "Đã trở lại phòng làm việc Giáo viên!")
-        return redirect('teacher_room')
-    else:
-        messages.warning(request, "Bạn không có quyền trở thành Giáo viên.")
-        return redirect('student_room')
+    # Kiểm tra xem học sinh đã từng vào chưa
+    # session, created = StudentExamSession.objects.get_or_create(user=request.user, quiz=quiz)
+
+    return render(request, 'app1/enter_quiz.html', {'quiz': quiz})
