@@ -167,6 +167,25 @@ def student_room(request):
     })
 
 
+@login_required(login_url='/accounts/login/')
+def toggle_viewpoint(request):
+    """Hàm dùng để bật/tắt góc nhìn học sinh cho giáo viên"""
+    if is_teacher(request.user):
+        # Lấy trạng thái hiện tại (mặc định là False), sau đó đảo ngược lại (True <-> False)
+        current_status = request.session.get('is_viewing_as_student', False)
+        request.session['is_viewing_as_student'] = not current_status
+
+        # Điều hướng dựa trên trạng thái mới
+        if request.session['is_viewing_as_student']:
+            messages.success(request, "Đã chuyển sang góc nhìn Học sinh!")
+            return redirect('student_room')
+        else:
+            messages.success(request, "Đã quay lại góc nhìn Giáo viên!")
+            return redirect('teacher_room')
+
+    # Nếu là học sinh thì không có quyền đổi, đẩy về trang chủ
+    return redirect('home')
+
 @login_required
 def revoke_teacher_view(request):
     if is_teacher(request.user):

@@ -161,13 +161,13 @@
 
                     {% if request.resolver_match.url_name == 'teacher_room' %}
                         <li>
-                            <a class="dropdown-item clickable text-primary fw-bold" href="{% url 'student_room' %}">
+                            <a class="dropdown-item clickable text-primary fw-bold" href="{% url 'toggle_viewpoint' %}">
                                 <ion-icon name="school-outline" class="me-2"></ion-icon> Xem màn Học sinh
                             </a>
                         </li>
                     {% else %}
                     <li>
-                        <a class="dropdown-item clickable text-primary fw-bold" href="{% url 'teacher_room' %}">
+                        <a class="dropdown-item clickable text-primary fw-bold" href="{% url 'toggle_viewpoint' %}">
                             <ion-icon name="easel-outline" class="me-2"></ion-icon> Trở lại màn Giáo viên
                         </a>
                     </li>

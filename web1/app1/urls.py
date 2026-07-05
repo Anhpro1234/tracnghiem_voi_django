@@ -34,5 +34,6 @@ urlpatterns = [
     path('profile-settings/', views.profile_settings_view, name='profile_settings'),
     path('revoke-teacher/', views.revoke_teacher_view, name='revoke_teacher_role'),
     path('room/<str:room_id>/', views.enter_quiz_room, name='enter_quiz_room'),
+    path('toggle-viewpoint/', views.toggle_viewpoint, name='toggle_viewpoint'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
