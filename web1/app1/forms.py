@@ -18,7 +18,7 @@ class CustomLoginForm(LoginForm):
 
 
 # ==========================================
-# 2. FORM ĐĂNG KÝ (Giữ nguyên code cũ của bạn)
+# 2. FORM ĐĂNG KÝ
 # ==========================================
 class CustomSignupForm(forms.Form):
     # Khai báo trường chọn quyền
