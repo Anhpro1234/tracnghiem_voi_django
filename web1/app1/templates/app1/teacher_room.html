@@ -56,7 +56,7 @@
                          </td>
                          <td class="text-center action-buttons"> <a href="{% url 'edit_quiz' quiz.id %}" class="btn btn-sm btn-primary action-safe clickable">Sửa</a>
                             <a href="{% url 'export_quiz_results' quiz.id %}" class="btn btn-sm btn-outline-success action-secondary clickable" title="Tải Bảng Điểm">
-                                <ion-icon name="stats-chart-outline" style="vertical-align: middle;"></ion-icon> Điểm
+                                Điểm
                             </a>
                             <a href="{% url 'delete_quiz' quiz.id %}" class="btn btn-sm btn-outline-danger action-danger clickable" onclick="return confirm('Bạn có chắc muốn xóa đề này?');">Xóa</a>
                          </td>
@@ -121,7 +121,7 @@
                           <td class="text-center">{{ c.created_at|date:"d/m/Y" }}</td>
                           <td class="text-center action-buttons"> <a href="{% url 'view_class_students' c.id %}" class="btn btn-sm btn-primary action-safe clickable">Xem HS</a>
                               <a href="{% url 'export_class_students' c.id %}" class="btn btn-sm btn-outline-success action-secondary clickable" title="Tải Danh Sách Lớp">
-                                  <ion-icon name="download-outline" style="vertical-align: middle;"></ion-icon> Tải DS
+                                  Tải DS
                               </a>
                               <a href="{% url 'delete_class' c.id %}" class="btn btn-sm btn-outline-danger action-danger clickable" onclick="return confirm('Xóa lớp này?');">Xóa</a>
                           </td>

@@ -1,16 +1,94 @@
 {% extends 'app1/base.html' %}
-{% block title %}Test{% endblock %}
+{% block title %}Trang Chủ{% endblock %}
 
 {% block content %}
-    <h6>Muốn đẹp hơn thì đi mà thêm code</h6>
+<style>
+        .card {
+        border: 2px solid #e9ecef !important;
+        transition: all 0.3s ease;
+    }
 
-    <hr>
-    <h2 style="color: #ff6600;">Khu vực Hệ thống</h2>
-    <ul>
-    <li><a href="{% url 'account_login' %}">🚪 Đăng nhập (Login)</a></li>
-    <li><a href="{% url 'teacher_room' %}">👨‍🏫 Vào phòng Test Giáo viên</a></li>
-    <li><a href="{% url 'student_room' %}">👨‍🎓 Vào phòng Test Học sinh</a></li>
-    <li><a href="{% url 'account_logout' %}">👋 Đăng xuất</a></li>
-    <li><a href="/admin/">⚙️ Trang quản trị Admin</a></li>
-</ul>
+    .card:hover {
+        border-color: #0d6efd !important;
+        transform: translateY(-6px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .text-gradient {
+        background: linear-gradient(45deg, #0d6efd, #198754);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+</style>
+<div class="container py-5">
+    <div class="text-center mb-5 animate-fade-in">
+        <h1 class="display-4 fw-bold text-gradient mb-3">Hệ Thống Thi Trắc Nghiệm Online</h1>
+        <p class="lead text-muted fs-5">Nền tảng ôn luyện, làm bài tập và tổ chức thi cử trực tuyến.</p>
+
+        <div class="d-flex justify-content-center gap-2 mt-3">
+            {% if user.is_authenticated %}
+                <span class="badge bg-success-subtle text-success p-2 px-3 border border-success-subtle rounded-pill">
+                    🟢 Đang đăng nhập với tư cách: <strong>{{ user.username }}</strong>
+                </span>
+            {% else %}
+                <span class="badge bg-secondary-subtle text-secondary p-2 px-3 border border-secondary-subtle rounded-pill">
+                    ⚫ Bạn chưa đăng nhập hệ thống
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+
+        <div class="col-md-5 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-up transition-all rounded-4">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="feature-icon bg-primary-subtle text-primary mb-3 rounded-3 d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <span class="fs-4">🎓</span>
+                    </div>
+                    <h4 class="card-title fw-bold mb-3 text-primary">Phòng Học Sinh</h4>
+                    <p class="card-text text-muted flex-grow-1">Vào phòng thi nhanh bằng mã, tham gia lớp học trực tuyến, xem lịch sử làm bài và nhận kết quả chi tiết.</p>
+
+                    <a href="/student-room/" class="btn btn-primary w-100 py-2.5 mt-3 fw-semibold rounded-3 shadow-sm">
+                        Vào phòng Học sinh →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-up transition-all rounded-4">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="feature-icon bg-success-subtle text-success mb-3 rounded-3 d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <span class="fs-4">👩‍🏫</span>
+                    </div>
+                    <h4 class="card-title fw-bold mb-3 text-success">Phòng Giáo Viên</h4>
+                    <p class="card-text text-muted flex-grow-1">Tạo phòng thi, quản lý ngân hàng câu hỏi trắc nghiệm, phê duyệt học sinh vào lớp và xuất báo cáo điểm số.</p>
+
+                    <a href="/teacher-room/" class="btn btn-success w-100 py-2.5 mt-3 fw-semibold text-white rounded-3 shadow-sm">
+                        Vào phòng Giáo viên →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-up {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .hover-up:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08) !important;
+    }
+    .text-gradient {
+        background: linear-gradient(45deg, #0d6efd, #198754);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .transition-all {
+        transition: all 0.25s ease-in-out;
+    }
+</style>
 {% endblock %}

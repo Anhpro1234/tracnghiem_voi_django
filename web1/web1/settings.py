@@ -36,7 +36,6 @@ AUTHENTICATION_BACKENDS = [
 
 ]
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -141,8 +140,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'login_redirect'
 AUTH_USER_MODEL = 'app1.User'
-LOGOUT_REDIRECT_URL = 'home'  # Trở về Trang chủ
-ALLOWED_HOSTS = ['.ngrok-free.app', 'localhost', '127.0.0.1']
+LOGOUT_REDIRECT_URL = 'home'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 ACCOUNT_EMAIL_VERIFICATION = 'none'
