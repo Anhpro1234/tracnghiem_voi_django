@@ -36,7 +36,8 @@ AUTHENTICATION_BACKENDS = [
 
 ]
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'bbi.io.vn']
+CSRF_TRUSTED_ORIGINS = ['https://bbi.io.vn', 'https://www.bbi.io.vn']
 
 # Application definition
 
