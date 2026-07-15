@@ -3,50 +3,27 @@
 {% block content %}
 <style>
     .quiz-container { max-width: 800px; margin: auto; padding: 20px; }
-
-    /* Box câu hỏi */
-    .quiz-card {
-        margin-bottom: 25px;
-        padding: 20px;
-        border-radius: 12px;
-        background-color: #ffffff; /* Ép nền trắng cho box */
-        border: 1px solid #dee2e6;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    /* Ép màu chữ đen đậm để dễ đọc */
-    .quiz-card p, .choice-label {
-        color: #333333 !important;
-        font-weight: 500;
-    }
-
-    /* Lựa chọn đáp án */
-    .choice-label {
-        display: block;
-        padding: 12px 15px;
-        margin: 8px 0;
-        border-radius: 8px;
-        cursor: pointer;
-        border: 1px solid #ced4da;
-        transition: 0.2s;
-    }
+    .quiz-card { margin-bottom: 25px; padding: 20px; border-radius: 12px; background-color: #ffffff; border: 1px solid #dee2e6; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .quiz-card p, .choice-label { color: #333333 !important; font-weight: 500; }
+    .choice-label { display: block; padding: 12px 15px; margin: 8px 0; border-radius: 8px; cursor: pointer; border: 1px solid #ced4da; transition: 0.2s; }
     .choice-label:hover { background-color: #f8f9fa; }
-
-    /* Input radio cho thẳng hàng */
     .choice-label input { margin-right: 10px; }
+
+    /* Timer dính lề */
+    #timer-box { position: sticky; top: 10px; z-index: 1000; border: 2px solid #ffc107; background-color: #fff3cd !important; }
 </style>
 
 <div class="quiz-container">
     <h2 class="text-center text-primary mb-4">{{ quiz.title }}</h2>
-    <p class="text-center">Mã phòng: <strong>{{ quiz.room_id }}</strong></p>
-    <hr>
+    <div id="timer-box" class="text-center mb-3 p-2 rounded" style="display: none; font-weight: bold;">
+        Thời gian còn lại: <span id="timer-display">--:--</span>
+    </div>
 
     <form method="POST" id="exam-form">
-        {% csrf_token %}    
+        {% csrf_token %}
         {% for q in questions %}
             <div class="quiz-card">
                 <p class="fw-bold">Câu {{ forloop.counter }}: {{ q.content }}</p>
-
                 <div class="ps-3">
                     {% for choice in q.shuffled_choices %}
                         <label class="choice-label">
@@ -56,13 +33,40 @@
                     {% endfor %}
                 </div>
             </div>
-        {% empty %}
-            <p class="text-center text-muted">Đề thi hiện chưa có câu hỏi nào.</p>
         {% endfor %}
 
         <div class="text-center mt-4">
-            <button type="submit" class="btn btn-success btn-lg px-5">Nộp bài</button>
+            <button type="submit" class="btn btn-success btn-lg px-5"
+                    onclick="this.disabled=true; this.innerText='Đang gửi...'; this.form.submit();">
+                Nộp bài
+            </button>
         </div>
     </form>
 </div>
+
+<script>
+    const isTimed = {{ is_timed|yesno:"true,false" }};
+    const endTimeStr = "{{ exam_end_time|default:'null'|safe }}";
+
+    if (isTimed && endTimeStr !== 'null') {
+        document.getElementById("timer-box").style.display = "block";
+        const targetDate = new Date(endTimeStr).getTime();
+
+        const x = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("timer-display").innerText = minutes + " phút " + seconds + " giây";
+
+            if (distance <= 0) {
+                clearInterval(x);
+                alert("Đã hết giờ! Hệ thống tự động nộp bài.");
+                document.getElementById("exam-form").submit();
+            }
+        }, 1000);
+    }
+</script>
 {% endblock %}

@@ -13,6 +13,7 @@ from django.utils import timezone
 from docx import Document
 from docx.table import Table
 from docx.text.paragraph import Paragraph
+from .utils import get_exam_end_time
 from .models import (
     Quiz, Question, Choice, Subject, StudentAnswer,
     Classroom, ClassEnrollment, StudentExamSession, Profile
@@ -400,30 +401,37 @@ def delete_quiz(request, quiz_id):
 def take_quiz(request, room_id):
     quiz = get_object_or_404(Quiz, room_id=room_id, is_active=True)
     questions = quiz.questions.prefetch_related('choices').all()
-    if 'btn_vao_thi' in request.POST:
-        room_id = request.POST.get('room_id', '').strip()
-        if Quiz.objects.filter(room_id=room_id, is_active=True).exists():
-            return redirect('enter_quiz_room', room_id=room_id)  # Sửa ở đây
-        messages.error(request, "Mã phòng thi không tồn tại!")
-    # 1. Xác định chế độ thời gian
-    if quiz.duration_minutes and quiz.duration_minutes > 0:
-        # Có giới hạn -> dùng StudentExamSession
+
+    # 1. Xác định chế độ thời gian bằng Utils
+    exam_end_time = get_exam_end_time(quiz.duration_minutes)
+    is_timed = exam_end_time is not None
+
+    if is_timed:
+        # Nếu có giới hạn -> dùng StudentExamSession
         session, created = StudentExamSession.objects.get_or_create(
             user=request.user,
             quiz=quiz,
-            defaults={'end_time': timezone.now() + timezone.timedelta(minutes=quiz.duration_minutes)}
+            defaults={'end_time': exam_end_time}
         )
 
+        # ĐỒNG BỘ THỜI GIAN: Nếu session cũ bị lệch thời gian (do GV sửa đề), cập nhật lại
+        if not created and not session.is_completed:
+            new_expected_end = get_exam_end_time(quiz.duration_minutes)
+            if session.end_time != new_expected_end:
+                session.end_time = new_expected_end
+                session.save()
+                exam_end_time = new_expected_end
+
+        # Kiểm tra hết giờ (chỉ kiểm tra 1 lần thôi)
         if session.is_completed or timezone.now() >= session.end_time:
             messages.warning(request, "Thời gian làm bài đã kết thúc hoặc bạn đã nộp bài.")
             return redirect('view_result', room_id=room_id)
 
-        # Xử lý mã đề
+        # Xử lý mã đề (xáo trộn 1 lần khi tạo session)
         if created or not session.shuffled_question_ids:
             question_ids = list(questions.values_list('id', flat=True))
             random.shuffle(question_ids)
             session.shuffled_question_ids = question_ids
-
             shuffled_choice_map = {}
             for q in questions:
                 choice_ids = list(q.choices.values_list('id', flat=True))
@@ -435,33 +443,26 @@ def take_quiz(request, room_id):
             question_ids = session.shuffled_question_ids
             shuffled_choice_map = session.shuffled_choice_ids
 
-        exam_end_time = session.end_time.isoformat()
-        total_minutes = quiz.duration_minutes
-
+        exam_end_time = session.end_time
     else:
-        # Không giới hạn thời gian -> không dùng session, xáo trộn mỗi lần
+        # Không giới hạn thời gian
         question_ids = list(questions.values_list('id', flat=True))
         random.shuffle(question_ids)
-
         shuffled_choice_map = {}
         for q in questions:
             choice_ids = list(q.choices.values_list('id', flat=True))
             random.shuffle(choice_ids)
             shuffled_choice_map[str(q.id)] = choice_ids
 
-        exam_end_time = ''
-        total_minutes = 0
-
-    # Sắp xếp lại danh sách câu hỏi
+    # 3. Sắp xếp lại danh sách câu hỏi
     question_dict = {q.id: q for q in questions}
     ordered_questions = [question_dict[qid] for qid in question_ids if qid in question_dict]
-
     for q in ordered_questions:
         choice_dict = {c.id: c for c in q.choices.all()}
         choice_order = shuffled_choice_map.get(str(q.id), [])
         q.shuffled_choices = [choice_dict[cid] for cid in choice_order if cid in choice_dict]
 
-    # 2. Xử lý POST nộp bài (chỉ có ý nghĩa với bài có giới hạn, nhưng vẫn cho nộp nếu không giới hạn)
+    # 4. Xử lý POST nộp bài
     if request.method == 'POST':
         score = 0
         with transaction.atomic():
@@ -470,16 +471,14 @@ def take_quiz(request, room_id):
                 choice_id = request.POST.get(f'question_{q.id}')
                 selected = Choice.objects.filter(id=choice_id, question=q).first() if choice_id else None
                 is_correct = selected.is_correct if selected else False
-                if is_correct:
-                    score += 1
+                if is_correct: score += 1
                 StudentAnswer.objects.create(
                     user=request.user, quiz=quiz, question=q,
                     selected_choice=selected, is_correct=is_correct
                 )
         request.session[f'score_{quiz.id}'] = score
 
-        # Nếu có session, đánh dấu hoàn thành
-        if 'session' in locals():
+        if is_timed and 'session' in locals():
             session.is_completed = True
             session.save()
 
@@ -488,8 +487,9 @@ def take_quiz(request, room_id):
     return render(request, 'app1/take_quiz.html', {
         'quiz': quiz,
         'questions': ordered_questions,
-        'exam_end_time': exam_end_time,
-        'total_minutes': total_minutes,
+        'exam_end_time': exam_end_time.isoformat() if exam_end_time else None,
+        'is_timed': is_timed,
+        'total_minutes': quiz.duration_minutes,
     })
 
 @login_required(login_url='/accounts/login/')
@@ -786,3 +786,14 @@ def enter_quiz_room(request, room_id):
     # session, created = StudentExamSession.objects.get_or_create(user=request.user, quiz=quiz)
 
     return render(request, 'app1/enter_quiz.html', {'quiz': quiz})
+
+
+def get_exam_end_time(time_limit):
+    try:
+        minutes = int(time_limit)
+    except (TypeError, ValueError):
+        minutes = 0
+
+    if minutes > 0:
+        return timezone.now() + timedelta(minutes=minutes)
+    return None
