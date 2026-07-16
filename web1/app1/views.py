@@ -401,59 +401,46 @@ def take_quiz(request, room_id):
     quiz = get_object_or_404(Quiz, room_id=room_id, is_active=True)
     questions = quiz.questions.prefetch_related('choices').all()
 
-    # 1. Xác định chế độ thời gian bằng Utils
     exam_end_time = get_exam_end_time(quiz.duration_minutes)
     is_timed = exam_end_time is not None
 
-    if is_timed:
-        # Nếu có giới hạn -> dùng StudentExamSession
-        session, created = StudentExamSession.objects.get_or_create(
-            user=request.user,
-            quiz=quiz,
-            defaults={'end_time': exam_end_time}
-        )
+    # LUÔN LUÔN DÙNG SESSION (Bảo vệ cả đề có giờ và không giờ khỏi việc thi lại)
+    session, created = StudentExamSession.objects.get_or_create(
+        user=request.user,
+        quiz=quiz,
+        defaults={'end_time': exam_end_time}
+    )
 
-        # ĐỒNG BỘ THỜI GIAN: Nếu session cũ bị lệch thời gian (do GV sửa đề), cập nhật lại
-        if not created and not session.is_completed:
-            new_expected_end = get_exam_end_time(quiz.duration_minutes)
-            if session.end_time != new_expected_end:
-                session.end_time = new_expected_end
-                session.save()
-                exam_end_time = new_expected_end
+    # 1. CHẶN HỌC SINH ĐÃ NỘP BÀI (Chính là cái đại ca tưởng là bug!)
+    if session.is_completed:
+        messages.warning(request, "Bạn đã hoàn thành bài thi này, không thể thi lại.")
+        return redirect('view_result', room_id=room_id)
 
-        # Kiểm tra hết giờ (chỉ kiểm tra 1 lần thôi)
-        if session.is_completed or timezone.now() >= session.end_time:
-            messages.warning(request, "Thời gian làm bài đã kết thúc hoặc bạn đã nộp bài.")
-            return redirect('view_result', room_id=room_id)
+    # 2. KIỂM TRA HẾT GIỜ (Chỉ kích hoạt nếu đề có giới hạn thời gian)
+    if is_timed and session.end_time and timezone.now() >= session.end_time:
+        session.is_completed = True
+        session.save()
+        messages.warning(request, "Thời gian làm bài đã kết thúc.")
+        return redirect('view_result', room_id=room_id)
 
-        # Xử lý mã đề (xáo trộn 1 lần khi tạo session)
-        if created or not session.shuffled_question_ids:
-            question_ids = list(questions.values_list('id', flat=True))
-            random.shuffle(question_ids)
-            session.shuffled_question_ids = question_ids
-            shuffled_choice_map = {}
-            for q in questions:
-                choice_ids = list(q.choices.values_list('id', flat=True))
-                random.shuffle(choice_ids)
-                shuffled_choice_map[str(q.id)] = choice_ids
-            session.shuffled_choice_ids = shuffled_choice_map
-            session.save()
-        else:
-            question_ids = session.shuffled_question_ids
-            shuffled_choice_map = session.shuffled_choice_ids
-
-        exam_end_time = session.end_time
-    else:
-        # Không giới hạn thời gian
+    # 3. XÁO TRỘN CÂU HỎI & LƯU VÀO SESSION (Tránh việc F5 bị đổi mã đề)
+    if created or not session.shuffled_question_ids:
         question_ids = list(questions.values_list('id', flat=True))
         random.shuffle(question_ids)
+        session.shuffled_question_ids = question_ids
+
         shuffled_choice_map = {}
         for q in questions:
             choice_ids = list(q.choices.values_list('id', flat=True))
             random.shuffle(choice_ids)
             shuffled_choice_map[str(q.id)] = choice_ids
+        session.shuffled_choice_ids = shuffled_choice_map
+        session.save()
+    else:
+        question_ids = session.shuffled_question_ids
+        shuffled_choice_map = session.shuffled_choice_ids
 
-    # 3. Sắp xếp lại danh sách câu hỏi
+    # Sắp xếp lại danh sách để hiển thị
     question_dict = {q.id: q for q in questions}
     ordered_questions = [question_dict[qid] for qid in question_ids if qid in question_dict]
     for q in ordered_questions:
@@ -461,7 +448,7 @@ def take_quiz(request, room_id):
         choice_order = shuffled_choice_map.get(str(q.id), [])
         q.shuffled_choices = [choice_dict[cid] for cid in choice_order if cid in choice_dict]
 
-    # 4. Xử lý POST nộp bài
+    # 4. XỬ LÝ KHI HỌC SINH BẤM "NỘP BÀI"
     if request.method == 'POST':
         score = 0
         with transaction.atomic():
@@ -477,16 +464,16 @@ def take_quiz(request, room_id):
                 )
         request.session[f'score_{quiz.id}'] = score
 
-        if is_timed and 'session' in locals():
-            session.is_completed = True
-            session.save()
+        # Nộp bài xong thì chốt khóa vĩnh viễn Session này
+        session.is_completed = True
+        session.save()
 
         return redirect('view_result', room_id=room_id)
 
     return render(request, 'app1/take_quiz.html', {
         'quiz': quiz,
         'questions': ordered_questions,
-        'exam_end_time': exam_end_time.isoformat() if exam_end_time else None,
+        'exam_end_time': session.end_time.isoformat() if session.end_time else None,
         'is_timed': is_timed,
         'total_minutes': quiz.duration_minutes,
     })

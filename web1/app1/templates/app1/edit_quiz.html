@@ -4,10 +4,33 @@
 {% block content %}
 <style>
     .edit-container { max-width: 900px; margin: 20px auto; }
-    .quiz-card { margin-bottom: 25px; border: 1px solid #dee2e6; padding: 20px; border-radius: 12px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .choice-item { margin-bottom: 10px; display: flex; align-items: center; padding: 8px; border-radius: 6px; }
-    .choice-item:hover { background: #f8f9fa; }
+
+    .quiz-card {
+        margin-bottom: 25px;
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        padding: 20px;
+        border-radius: 12px;
+        background-color: var(--bs-body-bg, #ffffff);
+        color: var(--bs-body-color, #212529);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .choice-item {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        border-radius: 6px;
+        transition: background-color 0.2s;
+    }
+
+    /* Nền hover cũng phải dùng biến để không bị chói ở Dark Mode */
+    .choice-item:hover {
+        background-color: var(--bs-tertiary-bg, #f8f9fa);
+    }
+
     .btn-fixed { padding: 10px 25px; border-radius: 6px; font-weight: bold; }
+    .cursor-pointer { cursor: pointer; }
 </style>
 
 <div class="edit-container">
@@ -56,7 +79,7 @@
             <button type="submit" name="save" class="btn btn-primary btn-fixed">Lưu đáp án & Thời gian</button>
             <button type="submit" name="publish" class="btn btn-success btn-fixed ms-2"
                     onclick="return confirm('Bạn chắc chắn muốn xuất đề? Sau khi xuất, đề sẽ hiển thị cho học sinh!');">
-                 Xuất đề 
+                 Xuất đề
             </button>
         </div>
     </form>
