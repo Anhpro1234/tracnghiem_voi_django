@@ -327,6 +327,7 @@ def upload_create_quiz(request):
 
     return render(request, 'app1/upload_quiz.html', {'subjects': Subject.objects.all()})
 
+
 @login_required(login_url='/accounts/login/')
 def edit_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
@@ -341,36 +342,34 @@ def edit_quiz(request, quiz_id):
                 question.choices.update(is_correct=False)
                 question.choices.filter(id=correct_id).update(is_correct=True)
 
-        # 2. Xử lý thời gian làm bài
+        # 2. XỬ LÝ THỜI GIAN LÀM BÀI (Chống bug auto nộp)
+        old_duration = quiz.duration_minutes
         duration_str = request.POST.get('duration_minutes', '').strip()
 
-        if duration_str and duration_str.isdigit():
+        # Ràng buộc giá trị nhập vào
+        if duration_str and duration_str.lstrip('-').isdigit():
             new_duration = int(duration_str)
-            if new_duration >= 0:
-                quiz.duration_minutes = new_duration
-                quiz.save()
-
-                if new_duration > 0:
-                    # Cập nhật end_time cho các session chưa hoàn thành
-                    active_sessions = StudentExamSession.objects.filter(quiz=quiz, is_completed=False)
-                    for session in active_sessions:
-                        session.end_time = session.start_time + timedelta(minutes=new_duration)
-                        session.save()
-                    messages.success(request, f"Đã cập nhật thời gian làm bài: {new_duration} phút (áp dụng cho học sinh đang thi).")
-                else:
-                    # new_duration == 0: không giới hạn
-                    StudentExamSession.objects.filter(quiz=quiz, is_completed=False).delete()
-                    messages.success(request, "Đã tắt giới hạn thời gian. Học sinh có thể làm bài thoải mái.")
-            else:
-                # Số âm → đặt mặc định 30
-                quiz.duration_minutes = 30
-                quiz.save()
-                messages.info(request, "Thời gian làm bài được đặt mặc định 30 phút (không nhận giá trị âm).")
+            if new_duration < 0:
+                new_duration = 30  # Chống nhập số âm
         else:
-            # Không nhập gì → mặc định 30
-            quiz.duration_minutes = 30
+            new_duration = 30  # Trống hoặc nhập chữ -> về 30
+
+        # CHỈ XỬ LÝ NẾU GIÁ TRỊ THỜI GIAN THỰC SỰ BỊ THAY ĐỔI
+        if new_duration != old_duration:
+            quiz.duration_minutes = new_duration
             quiz.save()
-            messages.info(request, "Thời gian làm bài được đặt mặc định 30 phút.")
+
+            # CHIÊU CHỐNG BUG: Xóa toàn bộ các phiên chưa nộp bài để Reset.
+            # Không dùng start_time cộng dồn vì sẽ lỗi với các phiên cũ từ hôm qua.
+            deleted_count, _ = StudentExamSession.objects.filter(quiz=quiz, is_completed=False).delete()
+
+            if new_duration == 0:
+                messages.success(request, "Đã tắt giới hạn thời gian. Học sinh có thể làm bài thoải mái.")
+            else:
+                messages.success(request,
+                                 f"Đã cập nhật thời gian thành {new_duration} phút. (Đã reset {deleted_count} phiên đang thi dở).")
+        else:
+            messages.success(request, "Đã lưu đáp án thành công!")
 
         # 3. Xử lý nút "Xuất đề" (kích hoạt)
         if 'publish' in request.POST:
